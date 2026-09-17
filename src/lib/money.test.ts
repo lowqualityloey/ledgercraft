@@ -1,8 +1,11 @@
 import { describe, expect, test } from "bun:test";
 import {
+  convertCents,
+  CurrencySchema,
   MoneyCentsSchema,
   formatCents,
   parseDollarsToCents,
+  parseFxRateToBps,
 } from "./money";
 
 describe("parseDollarsToCents", () => {
@@ -40,5 +43,40 @@ describe("formatCents", () => {
     expect(formatCents(99)).toBe("0.99");
     expect(formatCents(-250)).toBe("-2.50");
     expect(() => formatCents(10.5)).toThrow();
+  });
+});
+
+describe("CurrencySchema / convertCents (M6)", () => {
+  test("Currency enum 6 codes, USD default", () => {
+    expect(CurrencySchema.safeParse("USD").success).toBe(true);
+    expect(CurrencySchema.safeParse("EUR").success).toBe(true);
+    expect(CurrencySchema.safeParse("JPY").success).toBe(true);
+    expect(CurrencySchema.safeParse("CHF").success).toBe(false);
+  });
+
+  test("convertCents 10000 * 1.08 -> 10800", () => {
+    expect(convertCents(10000, 10800)).toBe(10800);
+    expect(convertCents(50000, 10800)).toBe(54000);
+    expect(convertCents(0, 10800)).toBe(0);
+  });
+
+  test("convertCents rounding 1c * 1.005 (10050 bps) -> 1c", () => {
+    expect(convertCents(1, 10050)).toBe(1); // 1*10050/10000=1.005 ->1
+    expect(convertCents(100, 10050)).toBe(101); // 1.005*100=100.5 ->101
+  });
+
+  test("convertCents rejects bad FxRateBps", () => {
+    expect(() => convertCents(10000, 999)).toThrow();
+    expect(() => convertCents(10000, 50001)).toThrow();
+    expect(() => convertCents(10000, 10.5 as unknown as number)).toThrow();
+  });
+
+  test("parseFxRateToBps", () => {
+    expect(parseFxRateToBps("1.08")).toBe(10800);
+    expect(parseFxRateToBps("1")).toBe(10000);
+    expect(parseFxRateToBps("0.10")).toBe(1000);
+    expect(parseFxRateToBps("1.0000")).toBe(10000);
+    expect(() => parseFxRateToBps("abc")).toThrow();
+    expect(() => parseFxRateToBps("1.12345")).toThrow();
   });
 });

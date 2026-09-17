@@ -11,6 +11,10 @@ export interface InvoiceRow {
   number: string;
   status: string;
   totalDisplay: string;
+  baseDisplay?: string;
+  fxLabel?: string | null;
+  currency?: string;
+  stripeSessionId?: string | null;
   client: { name: string; email: string };
   lines: { id: string; description: string; quantity: number; unitCents: number; lineTotal: number }[];
 }
@@ -85,7 +89,11 @@ export function InvoiceList({ invoices }: { invoices: InvoiceRow[] }) {
             ))}
           </ul>
           <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
-            <p className="font-mono text-sm tabular-nums">Total {inv.totalDisplay}</p>
+            <p className="font-mono text-sm tabular-nums">
+              {inv.fxLabel ? inv.fxLabel : `Total ${inv.totalDisplay}`}
+              {inv.fxLabel && <span className="ml-2 text-xs text-zinc-500">({inv.currency})</span>}
+              {inv.stripeSessionId && <span className="ml-2 rounded bg-indigo-50 px-1.5 py-0.5 text-xs text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">Stripe</span>}
+            </p>
             <div className="no-print flex gap-2">
               <Link
                 href={`/invoices/${inv.id}`}

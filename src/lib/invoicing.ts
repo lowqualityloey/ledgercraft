@@ -9,7 +9,7 @@ import {
   NotFoundError,
   ValidationError,
 } from "./ledger";
-import { MoneyCentsSchema } from "./money";
+import { convertCents, CurrencySchema, FxRateBpsSchema, MoneyCentsSchema } from "./money";
 
 // Milestone 2: Clients + Invoicing (accrual, full-pay only).
 // All money movement goes through balanced journals (INV-01, INV-02);
@@ -34,14 +34,22 @@ export const InvoiceLineSchema = z.object({
   unitCents: MoneyCentsSchema,
 });
 
-export const PostInvoiceSchema = z.object({
-  clientId: z.string().cuid(),
-  number: z.string().min(1).max(32),
-  lines: z.array(InvoiceLineSchema).min(1),
-  issueDate: z.string().datetime(),
-  idempotencyKey: z.string().min(8).max(56),
-});
-export type PostInvoiceInput = z.infer<typeof PostInvoiceSchema>;
+export const PostInvoiceSchema = z
+  .object({
+    clientId: z.string().cuid(),
+    number: z.string().min(1).max(32),
+    currency: CurrencySchema.default("USD"),
+    fxRateBps: FxRateBpsSchema.default(10000),
+    lines: z.array(InvoiceLineSchema).min(1),
+    issueDate: z.string().datetime(),
+    idempotencyKey: z.string().min(8).max(56),
+  })
+  .superRefine((v, ctx) => {
+    if (v.currency === "USD" && v.fxRateBps !== 10000) {
+      ctx.addIssue({ code: "custom", message: "USD must use fxRate 1.0000 (10000 bps)", path: ["fxRateBps"] });
+    }
+  });
+export type PostInvoiceInput = z.input<typeof PostInvoiceSchema>;
 
 export const MarkPaidSchema = z.object({
   invoiceId: z.string().cuid(),
@@ -98,6 +106,8 @@ export async function postInvoice(
   }));
   const total = priced.reduce((s, l) => s + l.lineTotal, 0);
   if (total <= 0) throw new ValidationError("Invoice total must be positive");
+  const baseTotal = convertCents(total, parsed.fxRateBps);
+  if (baseTotal <= 0) throw new ValidationError("Base total must be positive");
 
   const existing = await client.invoice.findUnique({
     where: { idempotencyKey: parsed.idempotencyKey },
@@ -124,12 +134,12 @@ export async function postInvoice(
       const entry = await tx.journalEntry.create({
         data: {
           date: new Date(parsed.issueDate),
-          description: `Invoice ${parsed.number} — ${customer.name}`,
+          description: `Invoice ${parsed.number} — ${customer.name} [${parsed.currency} ${total}c → USD ${baseTotal}c @${parsed.fxRateBps}]`,
           idempotencyKey: issueKey,
           lines: {
             create: [
-              { accountId: arId, debit: total, credit: 0 },
-              { accountId: revenueId, debit: 0, credit: total },
+              { accountId: arId, debit: baseTotal, credit: 0 },
+              { accountId: revenueId, debit: 0, credit: baseTotal },
             ],
           },
         },
@@ -141,6 +151,10 @@ export async function postInvoice(
           status: "UNPAID",
           subtotalCents: total,
           totalCents: total,
+          currency: parsed.currency,
+          fxRateBps: parsed.fxRateBps,
+          baseSubtotalCents: baseTotal,
+          baseTotalCents: baseTotal,
           issueEntryId: entry.id,
           idempotencyKey: parsed.idempotencyKey,
           lines: {
@@ -201,15 +215,16 @@ export async function markPaid(
 
   try {
     return await client.$transaction(async (tx) => {
+      const base = (invoice as { baseTotalCents?: number }).baseTotalCents ?? invoice.totalCents;
       const entry = await tx.journalEntry.create({
         data: {
           date: new Date(),
-          description: `Payment ${invoice.number} — ${invoice.totalCents}c`,
+          description: `Payment ${invoice.number} — ${invoice.totalCents}c [base ${base}c]`,
           idempotencyKey: payKey,
           lines: {
             create: [
-              { accountId: cashId, debit: invoice.totalCents, credit: 0 },
-              { accountId: arId, debit: 0, credit: invoice.totalCents },
+              { accountId: cashId, debit: base, credit: 0 },
+              { accountId: arId, debit: 0, credit: base },
             ],
           },
         },

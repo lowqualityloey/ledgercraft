@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createInvoiceAction } from "@/actions/invoicing";
-import { formatCents, parseDollarsToCents } from "@/lib/money";
+import { CURRENCY_CODES, convertCents, formatCents, parseDollarsToCents, parseFxRateToBps } from "@/lib/money";
 
 interface ClientOption {
   id: string;
@@ -50,22 +50,33 @@ export function InvoiceForm({
   const [issueDate, setIssueDate] = useState(
     () => new Date().toISOString().slice(0, 10),
   );
+  const [currency, setCurrency] = useState("USD");
+  const [fxRate, setFxRate] = useState("1.0000");
   const [lines, setLines] = useState<FormLine[]>([newLine()]);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
   const totals = useMemo(() => {
     const amounts = lines.map(lineTotal);
-    const valid =
-      clientId !== "" &&
-      number.trim() !== "" &&
-      amounts.every((a) => a !== null && (a as number) > 0);
-    const total = amounts.reduce<number>(
-      (s, a) => s + (a ?? 0),
-      0,
-    );
-    return { valid, total };
-  }, [lines, clientId, number]);
+    const validLines = amounts.every((a) => a !== null && (a as number) > 0);
+    const total = amounts.reduce<number>((s, a) => s + (a ?? 0), 0);
+    let fxBps: number | null = null;
+    let base: number | null = null;
+    let fxValid = true;
+    if (currency !== "USD") {
+      try {
+        fxBps = parseFxRateToBps(fxRate);
+        base = convertCents(total, fxBps);
+      } catch {
+        fxValid = false;
+      }
+    } else {
+      fxBps = 10000;
+      base = total;
+    }
+    const valid = clientId !== "" && number.trim() !== "" && validLines && fxValid && total > 0 && (base ?? 0) > 0;
+    return { valid, total, base, fxBps };
+  }, [lines, clientId, number, currency, fxRate]);
 
   const patch = (key: number, field: keyof FormLine, value: string) =>
     setLines((ls) => ls.map((l) => (l.key === key ? { ...l, [field]: value } : l)));
@@ -77,6 +88,8 @@ export function InvoiceForm({
       clientId,
       number,
       issueDate,
+      currency,
+      fxRate,
       lines: lines.map((l) => ({
         description: l.description,
         quantity: l.quantity,
@@ -102,7 +115,7 @@ export function InvoiceForm({
         void submit();
       }}
     >
-      <div className="grid gap-3 sm:grid-cols-3">
+      <div className="grid gap-3 sm:grid-cols-4">
         <label className="flex flex-col gap-1 text-sm">
           Client
           <select
@@ -141,14 +154,49 @@ export function InvoiceForm({
             className="rounded border border-zinc-300 bg-transparent px-2 py-1 dark:border-zinc-700"
           />
         </label>
+        <label className="flex flex-col gap-1 text-sm">
+          Currency
+          <select
+            aria-label="Currency"
+            value={currency}
+            onChange={(e) => {
+              const v = e.target.value;
+              setCurrency(v);
+              if (v === "USD") setFxRate("1.0000");
+            }}
+            className="rounded border border-zinc-300 bg-transparent px-2 py-1 dark:border-zinc-700"
+          >
+            {CURRENCY_CODES.map((c) => (
+              <option key={c} value={c}>
+                {c}
+              </option>
+            ))}
+          </select>
+        </label>
       </div>
+
+      {currency !== "USD" && (
+        <label className="mt-3 flex flex-col gap-1 text-sm">
+          FX rate (foreign → USD, e.g. 1.08)
+          <input
+            type="text"
+            required
+            inputMode="decimal"
+            aria-label="FX rate"
+            placeholder="1.0000"
+            value={fxRate}
+            onChange={(e) => setFxRate(e.target.value)}
+            className="max-w-[200px] rounded border border-zinc-300 bg-transparent px-2 py-1 font-mono dark:border-zinc-700"
+          />
+        </label>
+      )}
 
       <table className="mt-4 w-full text-sm">
         <thead>
           <tr className="text-left text-zinc-500">
             <th className="py-1 pr-2">Description</th>
             <th className="py-1 pr-2 text-right">Qty</th>
-            <th className="py-1 pr-2 text-right">Unit ($)</th>
+            <th className="py-1 pr-2 text-right">Unit ({currency})</th>
             <th className="w-10" aria-label="Actions" />
           </tr>
         </thead>
@@ -202,7 +250,7 @@ export function InvoiceForm({
         </tbody>
       </table>
 
-      <div className="mt-2 flex items-center justify-between text-sm">
+      <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-sm">
         <button
           type="button"
           onClick={() => setLines((ls) => [...ls, newLine()])}
@@ -210,9 +258,13 @@ export function InvoiceForm({
         >
           + Add line
         </button>
-        <p aria-live="polite" className="font-mono tabular-nums">
-          Total {formatCents(totals.total)}
-        </p>
+        <div className="text-right font-mono tabular-nums">
+          <p aria-live="polite">
+            Foreign {currency} {formatCents(totals.total)}
+            {currency !== "USD" && totals.base !== null ? ` → USD ${formatCents(totals.base)}` : ""}
+          </p>
+          {currency !== "USD" && <p className="text-xs text-zinc-500">Base USD at {fxRate}</p>}
+        </div>
       </div>
 
       {error && (

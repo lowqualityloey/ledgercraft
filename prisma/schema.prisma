@@ -75,23 +75,55 @@ enum InvoiceStatus {
   VOID
 }
 
+// Milestone 6 — Multi-currency (Base USD). Journal stays base-only.
+
+enum Currency {
+  USD
+  EUR
+  GBP
+  JPY
+  CAD
+  AUD
+}
+
+// Milestone 7 — Stripe (Checkout + webhook, base USD, hosted).
+
 model Invoice {
-  id             String        @id @default(cuid())
-  clientId       String
-  client         Client        @relation(fields: [clientId], references: [id], onDelete: Restrict)
-  number         String        @unique // app-sequenced, e.g. INV-0001
-  status         InvoiceStatus @default(DRAFT)
-  subtotalCents  Int
-  totalCents     Int
-  issueEntryId   String?       @unique
-  issueEntry     JournalEntry? @relation("InvoiceIssue", fields: [issueEntryId], references: [id])
-  paymentEntryId String?       @unique
-  paymentEntry   JournalEntry? @relation("InvoicePay", fields: [paymentEntryId], references: [id])
-  idempotencyKey String        @unique
-  lines          InvoiceLine[]
-  createdAt      DateTime      @default(now())
+  id                    String        @id @default(cuid())
+  clientId              String
+  client                Client        @relation(fields: [clientId], references: [id], onDelete: Restrict)
+  number                String        @unique // app-sequenced, e.g. INV-0001
+  status                InvoiceStatus @default(DRAFT)
+  subtotalCents         Int // foreign minor units
+  totalCents            Int // foreign minor units
+  currency              Currency      @default(USD)
+  fxRateBps             Int           @default(10000) // 10000=1.00, 4 decimals, 1000..50000
+  baseSubtotalCents     Int           @default(0) // base USD minor units
+  baseTotalCents        Int           @default(0)
+  stripeSessionId       String?       @unique
+  stripePaymentIntentId String?
+  issueEntryId          String?       @unique
+  issueEntry            JournalEntry? @relation("InvoiceIssue", fields: [issueEntryId], references: [id])
+  paymentEntryId        String?       @unique
+  paymentEntry          JournalEntry? @relation("InvoicePay", fields: [paymentEntryId], references: [id])
+  idempotencyKey        String        @unique
+  lines                 InvoiceLine[]
+  createdAt             DateTime      @default(now())
 
   @@index([clientId, status])
+  @@index([currency])
+}
+
+model StripeEvent {
+  id          String    @id @default(cuid())
+  stripeId    String    @unique // evt_...
+  type        String
+  payload     String
+  createdAt   DateTime  @default(now())
+  processedAt DateTime?
+
+  @@index([type])
+  @@index([createdAt])
 }
 
 model InvoiceLine {
@@ -123,4 +155,36 @@ model ImportBatch {
   postedCount    Int          @default(0)
   idempotencyKey String       @unique
   createdAt      DateTime     @default(now())
+}
+
+// Milestone 5 — Auth / Multi-user (shared ledger gate).
+
+enum Role {
+  OWNER
+  ACCOUNTANT
+}
+
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  passwordHash String
+  name         String?
+  role         Role      @default(OWNER)
+  sessions     Session[]
+  createdAt    DateTime  @default(now())
+
+  @@index([email])
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([token])
+  @@index([expiresAt])
 }

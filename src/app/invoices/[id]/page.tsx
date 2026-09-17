@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { getInvoiceReceipt } from "@/actions/invoicing";
 import { InvoiceReceipt } from "@/components/InvoiceReceipt";
 import { PrintButton } from "@/components/PrintButton";
+import { StripePayButton } from "@/components/StripePayButton";
 
 export default async function InvoiceReceiptPage({
   params,
@@ -13,6 +14,7 @@ export default async function InvoiceReceiptPage({
   const invoice = await getInvoiceReceipt(id);
   if (!invoice) notFound();
 
+  const showStripe = invoice.status === "UNPAID";
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-4 px-4 py-10">
       <nav className="no-print flex flex-wrap items-center justify-between gap-2">
@@ -27,6 +29,12 @@ export default async function InvoiceReceiptPage({
       <h1 className="no-print text-xl font-semibold">
         Receipt {invoice.number}
       </h1>
+      {showStripe && (
+        <div className="no-print">
+          <StripePayButton invoiceId={invoice.id} />
+          <p className="mt-1 text-xs text-zinc-500">Base USD {invoice.baseTotalDisplay} via Stripe Checkout</p>
+        </div>
+      )}
       <InvoiceReceipt invoice={invoice} />
     </main>
   );

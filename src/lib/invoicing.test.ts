@@ -202,6 +202,44 @@ describe("voidInvoice (AC-4) + reports (AC-5)", () => {
     const before = await profitAndLoss(testDb);
     const inv = await postInvoice(invoiceInput(), testDb);
     const after = await profitAndLoss(testDb);
-    expect(after.revenue - before.revenue).toBe(inv.totalCents);
+    expect(after.revenue - before.revenue).toBe((inv as unknown as { baseTotalCents: number }).baseTotalCents ?? inv.totalCents);
+  });
+});
+
+describe("multi-currency FX (M6 AC-1..AC-3)", () => {
+  test("EUR invoice posts foreign and base, journal in base", async () => {
+    const inv = await postInvoice(
+      invoiceInput({ currency: "EUR", fxRateBps: 10800, lines: [{ description: "EUR work", quantity: 1, unitCents: 10000 }] }),
+      testDb,
+    );
+    expect(inv.currency).toBe("EUR");
+    expect(inv.fxRateBps).toBe(10800);
+    expect(inv.totalCents).toBe(10000);
+    expect((inv as unknown as { baseTotalCents: number }).baseTotalCents).toBe(10800);
+    const entry = await testDb.journalEntry.findUniqueOrThrow({ where: { id: inv.issueEntryId! }, include: { lines: true } });
+    const debits = entry.lines.reduce((s, l) => s + l.debit, 0);
+    const credits = entry.lines.reduce((s, l) => s + l.credit, 0);
+    expect(debits).toBe(10800);
+    expect(credits).toBe(10800);
+    const tb = await trialBalance(testDb);
+    expect(tb.balanced).toBe(true);
+  });
+
+  test("USD with non-1.00 fxRate is rejected", async () => {
+    await expect(
+      postInvoice(invoiceInput({ currency: "USD", fxRateBps: 10800 }), testDb),
+    ).rejects.toThrow();
+  });
+
+  test("fxRate out of range is rejected", async () => {
+    await expect(postInvoice(invoiceInput({ currency: "EUR", fxRateBps: 999 }), testDb)).rejects.toThrow();
+    await expect(postInvoice(invoiceInput({ currency: "EUR", fxRateBps: 50001 }), testDb)).rejects.toThrow();
+  });
+
+  test("same idempotency with FX returns original", async () => {
+    const idem = key();
+    const a = await postInvoice(invoiceInput({ idempotencyKey: idem, currency: "GBP", fxRateBps: 12500, lines: [{ description: "GBP", quantity: 1, unitCents: 20000 }] }), testDb);
+    const b = await postInvoice(invoiceInput({ idempotencyKey: idem, number: "INV-OTHER-FX" }), testDb);
+    expect(b.id).toBe(a.id);
   });
 });
