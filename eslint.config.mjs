@@ -12,6 +12,9 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Local agent worktrees are full checkouts of this repo (kept out of git by
+    // .git/info/exclude); linting them only re-reports their own stale copies.
+    ".kilo/**",
   ]),
 ]);
 
