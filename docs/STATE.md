@@ -2,11 +2,11 @@
 
 ## 1. Executive Summary & Current Position
 - **Project Name**: LedgerCraft
-- **Current Milestone / Epic**: Milestones 1–6 shipped (2026-09-17) → Next: Stripe remainder TBD via `pk:plan`
+- **Current Milestone / Epic**: Milestones 1–6 shipped (2026-09-17) → Milestone 7 Stripe scoped (`PLAN-stripe` + Task Record `ready` 2026-09-17)
 - **Overall Status**: ACTIVE <!-- Options: ACTIVE | PAUSED | STABILIZING | RELEASE_CANDIDATE | COMPLETED (all milestones closed, release evidence archived, zero open blockers — recording stops here) -->
-- **Target Release / Deadline**: none (local-only)
-- **Current Working Branch**: main (`476437b`)
-- **Last Updated**: 2026-09-17 (M6 shipped — multi-currency `EUR→USD` base, 62/62 green, user acceptance)
+- **Target Release / Deadline**: none (local → hosted for Stripe; M7 `STRIPE_SECRET_KEY` in `.env`)
+- **Current Working Branch**: main (`98b44cc`)
+- **Last Updated**: 2026-09-17 (M7 scoped — Checkout + webhook, `ready` awaiting build)
 
 ---
 
@@ -20,6 +20,7 @@
 - [x] **Milestone 4**: Invoice PDF Receipts (read-only receipt + browser print CSS, zero deps) — shipped 2026-09-17 (M4.1–M4.3 + spec, `9c36976`)
 - [x] **Milestone 5**: Auth / Multi-User Accountant Login (shared ledger gate) — shipped 2026-09-17 (M5.1 `cde43b5`, M5.2–M5.4 `df3b5de`, 53/53 green, user acceptance)
 - [x] **Milestone 6**: Multi-Currency Foreign Invoices (Base USD) — shipped 2026-09-17 (M6.1 `476437b` + hardening, 62/62 green, user acceptance)
+- [ ] **Milestone 7**: Stripe Checkout + Webhook (Base USD, Hosted) — scoped 2026-09-17 (`PLAN-stripe` + `TASK-2026-09-17-stripe` `ready`); Later remainder → none (all Later items now scoped)
 
 ### Active Milestone Task Breakdown
 Track tasks using atomic checklists (`[x]` Done, `[/]` In Progress, `[ ]` Queued, `[!]` Blocked):
@@ -56,16 +57,20 @@ Track tasks using atomic checklists (`[x]` Done, `[/]` In Progress, `[ ]` Queued
 - [x] TASK-2026-09-17-multi-currency M6.3 UI + receipt (p1) — done 2026-09-17 (form `EUR`+`1.08`→`USD 230.00`, list `EUR 200.00 → USD 230.00`, receipt dual, `476437b`)
 - [x] TASK-2026-09-17-multi-currency M6.4 Hardening + verify (p2) — done 2026-09-17 (no float, `convertCents` integer, 20× `requireSession`, `USD 100→100` `EUR 100×1.08→108` TB balanced, `tsc`/`lint`/`build` Proxy)
 - [x] Manual acceptance M6 (owner: user): `EUR 100×1.08→108` + `USD 100→100`, list dual, receipt dual, TB balanced — accepted 2026-09-17
+- [ ] TASK-2026-09-17-stripe M7.1 Schema + Stripe client (p0) — queued 2026-09-17 (`Invoice.stripe*` + `StripeEvent` + `stripe@19.1.0`)
+- [ ] TASK-2026-09-17-stripe M7.2 Checkout action + webhook (p0) — queued 2026-09-17 (`createCheckout` + `POST /api/stripe/webhook` + idempotency)
+- [ ] TASK-2026-09-17-stripe M7.3 Button + wiring (p1) — queued 2026-09-17 (`StripePayButton` when `UNPAID`)
+- [ ] TASK-2026-09-17-stripe M7.4 Hardening + verify (p2) — queued 2026-09-17 (Stripe CLI `checkout.session.completed` → `PAID` + replay `200`)
 
 ---
 
 ## 3. Active Working Set
 - **Target Workspace / Package (if Monorepo)**: standalone (N/A)
-- **Active RFC / Spec**: none (M6 spec sealed: `docs/specs/2026-09-17-spec-multi-currency.md`)
-- **Active Task Spec**: none (M6 Task Record completed at `476437b`; TDD `disabled`)
-- **Key Source Files in Flight**: none (all landed at `476437b`)
+- **Active RFC / Spec**: `docs/specs/2026-09-17-spec-stripe.md` (`PLAN-stripe`, Full, `ready` 2026-09-17 — M7 Checkout + webhook hosted)
+- **Active Task Spec**: `docs/tasks/TASK-2026-09-17-stripe.md` (`ready` — awaiting approval to `in_progress`; TDD `disabled`)
+- **Key Source Files in Flight**: none yet (next: `prisma/schema.prisma`, `src/lib/stripe.ts`, `src/app/api/stripe/webhook/route.ts`, `src/actions/stripe.ts`)
 - **Verification Commands (Scoped)**:
-  - Unit Tests: `bun test` (62 pass / 0 fail 2026-09-17)
+  - Unit Tests: `bun test` (62 pass / 0 fail 2026-09-17; M7 will be 62+ new)
   - Typecheck: `bunx tsc --noEmit` (green 2026-09-17)
   - Linter: `bun run lint` (green 2026-09-17)
   - Build: `bun run build` (OK 2026-09-17, 11 routes + `ƒ Proxy (Middleware)`, all protected `ƒ`)
@@ -76,26 +81,26 @@ Track tasks using atomic checklists (`[x]` Done, `[/]` In Progress, `[ ]` Queued
 
 > This section is a synchronized projection for checkpoint continuity when the host project uses Controlled Work. The canonical authority remains `docs/tasks/<task-id>.md`; disagreement with that record is a validation failure and leaves execution blocked or `checkpoint_due` until reconciled.
 
-- **Local Task Source**: `docs/tasks/TASK-2026-09-17-multi-currency.md`
-- **Task ID**: `TASK-2026-09-17-multi-currency`
-- **Task Record**: `docs/tasks/TASK-2026-09-17-multi-currency.md`
-- **Specification**: `docs/specs/2026-09-17-spec-multi-currency.md`
-- **Execution Scope**: `Repository standalone (single Next.js app + local SQLite)`
-- **Execution State**: `completed`
-- **Mapped `pk:tasks` Status**: `Done`
+- **Local Task Source**: `docs/tasks/TASK-2026-09-17-stripe.md`
+- **Task ID**: `TASK-2026-09-17-stripe`
+- **Task Record**: `docs/tasks/TASK-2026-09-17-stripe.md`
+- **Specification**: `docs/specs/2026-09-17-spec-stripe.md`
+- **Execution Scope**: `Repository standalone (single Next.js app + local SQLite → hosted)`
+- **Execution State**: `ready`
+- **Mapped `pk:tasks` Status**: `To Do`
 - **Active Task Pointer**: `None`
-- **Owner / Current Actor**: `user (solo freelancer, M6 approver) / Assistant (M6 shipped)`
-- **Start Time**: `2026-09-17 UTC`
+- **Owner / Current Actor**: `user (solo freelancer, M7 approver) / Assistant (pk:tasks)`
+- **Start Time**: `N/A`
 - **Current Branch**: `main`
-- **Current Revision**: `476437b`
+- **Current Revision**: `98b44cc`
 - **Checkpoint Policy**: `Soft ~60m, hard ≤90m; event-driven on milestone/task/scope/handoff/compaction`
-- **Blockers and Resume Condition**: `None — M6 shipped, user accepted 2026-09-17`
-- **Verification Status**: `bun test 62/62 + tsc clean + lint clean + build 11 routes Proxy 2026-09-17; curl EUR 200→230 USD 100→100 TB balanced + gate 307/200`
+- **Blockers and Resume Condition**: `None — awaiting explicit approval to enter in_progress`
+- **Verification Status**: `bun test 62/62 + tsc clean + lint clean + build 11 routes Proxy 2026-09-17 (pre-M7); M7 gate: bun test + tsc + lint + build + Stripe CLI trigger`
 - **CI Evidence**: `N/A`
-- **Changed-File Summary**: `M6 shipped: Currency + convertCents + FX-aware postInvoice + form/list/receipt dual (62/62)`
+- **Changed-File Summary**: `Pending M7.1–M7.4 (Invoice.stripe* + StripeEvent + stripe client + webhook + button)`
 - **Latest Checkpoint**: `None`
 - **Latest Handoff**: `None`
-- **Next Action**: `None — M6 complete; Later ledger remains: Stripe`
+- **Next Action**: `Await approval to set TASK-2026-09-17-stripe → in_progress and build M7.1`
 
 ---
 
@@ -135,16 +140,17 @@ Staging area for rules observed during sessions but not yet approved as invarian
 ---
 
 ## 5. Known Blockers, Risks & Open Questions
-- **Blockers**: none
+- **Blockers**: none (M7 `ready` — blocked only on explicit approval to start build)
 - **Architectural Questions**:
-  - Later ledger remainder is Stripe (remaining) — needs `pk:plan` for Milestone 7.
+  - M7 scoped as Stripe Checkout + webhook (hosted) — built from `PLAN-stripe`; all Later items now scoped (Stripe is last).
   - Remote/GitHub setup open (no remote; `pk:pr` blocked until remote added — `tracking: github` in `PROMPTKIT.md` but local record is authoritative).
 - **Technical Debt & Risks**:
   - Pre-existing init dirt untracked (`.clinerules/`, `.github/`, `.gitmodules`, `.opencode/`, `.promptkit/`, `AGENTS.md`) — surfaced, never staged; decide keep/commit separately.
   - Generated Prisma client (`src/generated/`) gitignored — fresh clones must run `bunx prisma generate`.
   - INV-04 evolution in M5: "no auth, local single-owner" → "auth wall, shared ledger (2 users), still local SQLite"; row-level tenant isolation deferred — track as risk if accountant read-only is needed (see `ASSUMPTION-auth-multi-user-002`).
   - INV-02 guard for M6: FX must stay integer `convertCents` — no float; see `DECISION-multi-currency-001`.
-- **Later ledger (deferred, not backlog)**: Stripe webhooks (remaining). Shipped out of it: invoicing + clients (M2), bank CSV imports (M3), PDF receipts via browser print (M4), auth/multi-user (M5), multi-currency (M6).
+  - Hosted risk for M7: `file:./ledger.db` on Vercel ephemeral FS — migrate to `libSQL` remote if persistence needed (see `ASSUMPTION-stripe-001`).
+- **Later ledger (deferred, not backlog)**: none (all shipped/scoped) — shipped: invoicing (M2), CSV (M3), PDF (M4), auth (M5), multi-currency (M6), Stripe now M7 scoped.
 
 ---
 
@@ -156,9 +162,9 @@ Staging area for rules observed during sessions but not yet approved as invarian
 ---
 
 ## 7. Next Immediate Actions (Queued)
-1. Define Stripe scope (`pk:plan` — remaining Later ledger).
+1. Build M7 Stripe (`TASK-2026-09-17-stripe` `ready` → await approval → M7.1 schema+client → M7.2 checkout+webhook → M7.3 button → M7.4 hardening).
 2. Optional: add git remote + `pk:pr` for review; decide fate of untracked init dirt.
-3. `bun dev` daily driver (`:3000`): login at `/login`, then journal at `/journal`, invoices at `/invoices` (+ receipts with EUR→USD dual), imports at `/imports`, reports at `/trial-balance` + `/profit-loss` — all behind auth wall.
+3. `bun dev` daily driver (`:3000`): login at `/login`, then journal at `/journal`, invoices at `/invoices` (+ receipts with EUR→USD, `Pay with Stripe` when UNPAID), imports at `/imports`, reports at `/trial-balance` + `/profit-loss` — all behind auth wall (hosted for Stripe webhook).
 
 ---
 
