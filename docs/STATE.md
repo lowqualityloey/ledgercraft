@@ -2,11 +2,11 @@
 
 ## 1. Executive Summary & Current Position
 - **Project Name**: LedgerCraft
-- **Current Milestone / Epic**: Milestones 1–7 shipped (2026-09-17); Vercel build repaired (2026-09-18) and the ledger moved onto a hosted libSQL database (Turso) → Next: commit that work / polish / release TBD
+- **Current Milestone / Epic**: Milestones 1–7 shipped (2026-09-17); Vercel build repaired (2026-09-18) and the ledger moved onto a hosted libSQL database (Turso), now committed → Next: Turso token rotation / polish / release TBD
 - **Overall Status**: ACTIVE <!-- Options: ACTIVE | PAUSED | STABILIZING | RELEASE_CANDIDATE | COMPLETED (all milestones closed, release evidence archived, zero open blockers — recording stops here) -->
 - **Target Release / Deadline**: none (local → hosted; M7 live with Stripe test keys; ledger writes are now durable on Turso)
-- **Current Working Branch**: main (`16b22d5` + uncommitted hosted-libSQL work)
-- **Last Updated**: 2026-09-18 (hosted libSQL migration — Turso `ledgercraft` migrated + seeded, Production/Preview env switched, login write verified persistent across environments; 75/75 green)
+- **Current Working Branch**: main (`6921d92`)
+- **Last Updated**: 2026-09-18 (hosted libSQL migration — Turso `ledgercraft` migrated + seeded, Production/Preview env switched, login write verified persistent across environments, work committed in three atomic commits; 75/75 green)
 
 ---
 
@@ -67,8 +67,8 @@ Track tasks using atomic checklists (`[x]` Done, `[/]` In Progress, `[ ]` Queued
 ## 3. Active Working Set
 - **Target Workspace / Package (if Monorepo)**: standalone (N/A)
 - **Active RFC / Spec**: `docs/specs/2026-09-18-spec-hosted-libsql.md` (`PLAN-hosted-libsql`, L2)
-- **Active Task Spec**: `docs/tasks/TASK-2026-09-18-hosted-libsql.md` — all five ACs pass; awaiting commit
-- **Key Source Files in Flight**: `src/lib/datasource.ts` (+ `src/lib/datasource.test.ts`), `src/lib/db.ts`, `.env.example`, `eslint.config.mjs` (all uncommitted)
+- **Active Task Spec**: `docs/tasks/TASK-2026-09-18-hosted-libsql.md` — all five ACs pass; committed `6921d92`
+- **Key Source Files in Flight**: none — `src/lib/datasource.ts` (+ `src/lib/datasource.test.ts`), `src/lib/db.ts`, `.env.example` landed in `dc8c785`; `eslint.config.mjs` in `edeed56`
 - **Verification Commands (Scoped)**:
   - Unit Tests: `bun test` (75 pass / 0 fail 2026-09-18)
   - Typecheck: `bunx tsc --noEmit` (green 2026-09-18)
@@ -88,21 +88,21 @@ Track tasks using atomic checklists (`[x]` Done, `[/]` In Progress, `[ ]` Queued
 - **Task Record**: `docs/tasks/TASK-2026-09-18-hosted-libsql.md`
 - **Specification**: `docs/specs/2026-09-18-spec-hosted-libsql.md`
 - **Execution Scope**: `Repository standalone (single Next.js app + local SQLite → hosted)`
-- **Execution State**: `in_progress` (all ACs pass; uncommitted)
-- **Mapped `pk:tasks` Status**: `In Progress`
-- **Active Task Pointer**: `TASK-2026-09-18-hosted-libsql`
+- **Execution State**: `completed` (all ACs pass; committed `dc8c785` + `edeed56` + `6921d92`)
+- **Mapped `pk:tasks` Status**: `Done`
+- **Active Task Pointer**: `None (hosted-libSQL committed 6921d92)`
 - **Owner / Current Actor**: `user (solo freelancer, migration approver) / Assistant (migration executed + verified)`
 - **Start Time**: `2026-09-18 UTC`
 - **Current Branch**: `main`
-- **Current Revision**: `16b22d5` + uncommitted hosted-libSQL work
+- **Current Revision**: `6921d92`
 - **Checkpoint Policy**: `Soft ~60m, hard ≤90m; event-driven on milestone/task/scope/handoff/compaction`
-- **Blockers and Resume Condition**: `None — hosted DB live and verified; resume by committing the work`
+- **Blockers and Resume Condition**: `None — hosted DB live and verified and the work is committed; resume with the queued follow-ups (Turso token rotation, local .env target, ledger.db drift)`
 - **Verification Status**: `bun test 75/75 + tsc clean + lint clean + build 13 routes 2026-09-18; hosted login write persisted and cross-environment read proven`
 - **CI Evidence**: `N/A`
-- **Changed-File Summary**: `Hosted libSQL: src/lib/datasource.ts (+tests), src/lib/db.ts, .env.example, eslint.config.mjs, spec + task record (uncommitted); Turso ledgercraft seeded 15 accounts / 2 users`
+- **Changed-File Summary**: `Hosted libSQL committed: dc8c785 (src/lib/datasource.ts +tests, src/lib/db.ts, .env.example), edeed56 (eslint.config.mjs), 6921d92 (spec + task record + STATE); Turso ledgercraft seeded 15 accounts / 2 users`
 - **Latest Checkpoint**: `pk:checkpoint recorded 2026-09-18 (Vercel repair)`
 - **Latest Handoff**: `docs/tasks/TASK-2026-09-17-core-ledger.handoff-01.md` + csv-import handoff (2026-09-17)`
-- **Next Action**: `Commit the hosted-libSQL work (pk:commit), then decide the local .env target and rotate the Turso tokens`
+- **Next Action**: `Rotate the Turso tokens, then decide the local .env target (hosted vs isolated file:./ledger.db)`
 
 ---
 
@@ -169,13 +169,13 @@ Staging area for rules observed during sessions but not yet approved as invarian
 ---
 
 ## 7. Next Immediate Actions (Queued)
-1. Commit the hosted-libSQL work (`pk:commit`) — resolver + tests, `src/lib/db.ts`, `.env.example`, `eslint.config.mjs`, spec + task record; credentials stay out of the commit (`.env*` is gitignored).
+1. ~~Commit the hosted-libSQL work (`pk:commit`)~~ — **done 2026-09-18**: `dc8c785` resolver + tests + `src/lib/db.ts` + `.env.example`, `edeed56` eslint agent worktrees, `6921d92` spec + task record + STATE; credentials never staged (`.env*` is gitignored).
 2. Rotate the Turso tokens: the platform token passed through chat and the database token was minted from it; mint a fresh database token and update Vercel + `.env`.
 3. Decide the local `.env` target — hosted (current, dev writes to production data) or isolated `file:./ledger.db` (commented line is ready).
 4. Decide the `ledger.db` drift (tracked binary, modified vs HEAD) — it is no longer a production dependency, so commit or reset it deliberately.
 5. Optional: `pk:pr` — remote `origin` is configured; also commit the remaining init dirt and refresh README’s stale hosted reference (`55er…` / `ca8d043`).
-4. `bun dev` daily driver (`:3000`): login at `/login`, then journal at `/journal`, invoices at `/invoices` (+ receipts with EUR→USD, `Pay with Stripe` when UNPAID), imports at `/imports`, reports at `/trial-balance` + `/profit-loss` — all behind auth wall (hosted webhook at `/api/stripe/webhook`).
-5. Polish / release: Stripe live keys cutover, FX revaluation, or CSV multi-currency — via `pk:plan`.
+6. `bun dev` daily driver (`:3000`): login at `/login`, then journal at `/journal`, invoices at `/invoices` (+ receipts with EUR→USD, `Pay with Stripe` when UNPAID), imports at `/imports`, reports at `/trial-balance` + `/profit-loss` — all behind auth wall (hosted webhook at `/api/stripe/webhook`).
+7. Polish / release: Stripe live keys cutover, FX revaluation, or CSV multi-currency — via `pk:plan`.
 
 ---
 

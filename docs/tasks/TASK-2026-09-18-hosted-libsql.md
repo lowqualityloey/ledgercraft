@@ -73,4 +73,5 @@
 - **TDD Mode**: `enabled` for `resolveDatasource` (pure function, unit-tested); smoke probes for hosted integration
 - **Checkpoint Policy**: `Soft ~60m, hard ≤90m; event-driven on scope/deploy/handoff` (L2 hard stop)
 - **Commit Policy**: stage only the resolver, its tests, `src/lib/db.ts`, `.env.example`, and these two records; credentials are never staged
+- **Commit Evidence**: `2026-09-18 (three atomic commits, staged-index secret scan clean) — dc8c785 feat(db): resolve libSQL datasource from env for hosted databases; edeed56 chore(lint): ignore local agent worktrees in eslint; 6921d92 docs(plan): record hosted libsql migration (spec + task + STATE)`. Staged-only, explicit paths, no `.env`/credentials in any commit; `.env.example` carries placeholders only.
 - **Deploy Policy**: remote schema bootstrap → env update → code deploy, in that order; a deploy before the remote schema exists is a rollout failure
