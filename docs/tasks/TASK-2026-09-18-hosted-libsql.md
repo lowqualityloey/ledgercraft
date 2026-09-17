@@ -66,12 +66,25 @@
   - **Result**: `Pass`
   - **Evidence**: `2026-09-18 — 75/75 suite (13 resolver tests incl. the TURSO_DATABASE_URL aliases) + bunx tsc --noEmit exit 0 + bun run lint exit 0 (agent worktrees now in globalIgnores) + bun run build exit 0 (13 routes). Hosted: unauthed / 307 → /login, /login 200, authed routes 200. Local development: the resolver still defaults to file:./ledger.db when no URL is set, and the file: URL is preserved (commented) in .env beside the hosted one. No credential appears in git, docs, or logs.`
   - Gherkin: `Given the new datasource code, When unauthed GET /, Then 307 to /login; When authed, Then 200 on all 8 protected routes. Given a file: DATABASE_URL (or none) and no token, When bun dev runs, Then it reads file:./ledger.db and the suite stays green. Given the hosted pairing, When the app writes, Then the row is visible to every other instance and environment. Given any env, Then no credential appears in git, docs, or logs.`
-  - Note: `.env` currently points local development at the hosted database (per the user's request to wire it there), so `bun dev` writes to the same Turso database as Production/Preview; the `file:./ledger.db` line is kept commented for switching back.`
+  - Note: `.env` pointed local development at the hosted database at commit time, so `bun dev`/`bun test` wrote to the same Turso database as Production/Preview. This was corrected immediately after — see §5.`
 
 ## 4. Execution Policy
 
 - **TDD Mode**: `enabled` for `resolveDatasource` (pure function, unit-tested); smoke probes for hosted integration
 - **Checkpoint Policy**: `Soft ~60m, hard ≤90m; event-driven on scope/deploy/handoff` (L2 hard stop)
 - **Commit Policy**: stage only the resolver, its tests, `src/lib/db.ts`, `.env.example`, and these two records; credentials are never staged
-- **Commit Evidence**: `2026-09-18 (three atomic commits, staged-index secret scan clean) — dc8c785 feat(db): resolve libSQL datasource from env for hosted databases; edeed56 chore(lint): ignore local agent worktrees in eslint; 6921d92 docs(plan): record hosted libsql migration (spec + task + STATE)`. Staged-only, explicit paths, no `.env`/credentials in any commit; `.env.example` carries placeholders only.
+- **Commit Evidence**: `2026-09-18 (three atomic commits, staged-index secret scan clean) — 666636a feat(db): resolve libSQL datasource from env for hosted databases; 9724b09 chore(lint): ignore local agent worktrees in eslint; 56c1cd4 docs(plan): record hosted libsql migration (spec + task + STATE)`. Staged-only, explicit paths, no `.env`/credentials in any commit; `.env.example` carries placeholders only.
 - **Deploy Policy**: remote schema bootstrap → env update → code deploy, in that order; a deploy before the remote schema exists is a rollout failure
+
+## 5. Post-Commit Follow-Up — Local Isolation Restored (2026-09-18)
+
+This closes the deviation noted in AC-5: hosting `DATABASE_URL` in `.env` had silently pointed *local* runs at production, contradicting the planning record's explicit non-goal ("not pointing local development at the hosted database").
+
+- **Change**: `.env` keeps the hosted libSQL URL + token (Vercel, ad-hoc remote ops). Two gitignored overrides pin local modes to the file database — `.env.development.local` (`bun dev`) and `.env.test.local` (`bun test`), each `DATABASE_URL="file:./ledger.db"`.
+- **Why override files, not a code change**: Next.js loads `.env.<mode>.local` *after* `.env.local`, and Bun uses the same order (`.env` → `.env.<mode>` → `.env.local` → `.env.<mode>.local`), so a later `vercel env pull` rewriting `.env.local` cannot silently re-point development at production. No application code changed.
+- **Evidence — read path**: a session minted through the app's own code path into `file:./ledger.db` (a token absent from the hosted DB) returned `200` on `/`, `/journal`, `/trial-balance`, `/accounts`, `/invoices` from `bun dev` on `:3100`, and `/journal` rendered the local-only entries (local 5 journal entries vs 0 remotely).
+- **Evidence — write path**: a signed Stripe webhook (`probe.local_write`) POSTed to `bun dev` returned `200 {"received":true,"unhandled":"probe.local_write"}`; the `StripeEvent` row landed in `file:./ledger.db` (1 row) and **not** in the hosted database (0 rows, 0 total). Probe row deleted after verification.
+- **Evidence — test path**: with a clean shell, `bun test` resolved `file:./ledger.db` instead of `libsql://…`; before this change the same probe resolved the hosted URL with a token, meaning `src/lib/auth.test.ts` (which drives the real Prisma client) had been creating and deleting `User`/`Session` fixtures **in production**.
+- **Evidence — script path**: a plain `bun <file>` (the `bun db:seed` / `bun prisma/seed.ts` shape) now resolves `file:./ledger.db`; `NODE_ENV=production bun <file>` still resolves the hosted URL, so production-mode tooling is unaffected.
+- **Docs**: `.env.example` + `README.md` now document the load order and both override files; the stale "`file:/tmp/ledger.db` on Vercel" guidance was removed.
+- **Not verified here**: the hosted deployment was not redeployed or re-tested this turn (no code change), and the local-mode switch was not exercised through a browser.
