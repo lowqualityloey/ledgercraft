@@ -2,11 +2,11 @@
 
 ## 1. Executive Summary & Current Position
 - **Project Name**: LedgerCraft
-- **Current Milestone / Epic**: Milestones 1–4 shipped (2026-09-17) → Milestone 5 Auth/Multi-User `in_progress` (M5.1 committed `cde43b5`, M5.2 gate + login + M5.3 wiring landed)
+- **Current Milestone / Epic**: Milestones 1–5 shipped (2026-09-17) → Next: Later ledger remainder (multi-currency, Stripe) TBD via `pk:plan`
 - **Overall Status**: ACTIVE <!-- Options: ACTIVE | PAUSED | STABILIZING | RELEASE_CANDIDATE | COMPLETED (all milestones closed, release evidence archived, zero open blockers — recording stops here) -->
-- **Target Release / Deadline**: none (local-only; M5 local `bun dev` + `AUTH_SECRET` in `.env`)
-- **Current Working Branch**: main (`cde43b5`)
-- **Last Updated**: 2026-09-17 (M5.3 done — requireSession on all actions, 53/53 green, fresh :3000 gate 307/200)
+- **Target Release / Deadline**: none (local-only)
+- **Current Working Branch**: main (`df3b5de`)
+- **Last Updated**: 2026-09-17 (M5 shipped — auth gate + login + wiring + hardening, 53/53 green, user acceptance)
 
 ---
 
@@ -18,7 +18,7 @@
 - [x] **Milestone 2**: Clients + Invoicing (accrual, full-pay) — shipped 2026-09-17 (T1–T4 + user acceptance, `1e3361f`)
 - [x] **Milestone 3**: Bank CSV Import (drafts + balanced post + dedup) — shipped 2026-09-17 (M3.1–M3.4 + user acceptance, `539de27`)
 - [x] **Milestone 4**: Invoice PDF Receipts (read-only receipt + browser print CSS, zero deps) — shipped 2026-09-17 (M4.1–M4.3 + spec, `9c36976`)
-- [ ] **Milestone 5**: Auth / Multi-User Accountant Login (shared ledger gate) — `in_progress` 2026-09-17 (`PLAN-auth-multi-user` + `TASK-2026-09-17-auth-multi-user` `in_progress` M5.1–M5.3); Later remainder → multi-currency, Stripe
+- [x] **Milestone 5**: Auth / Multi-User Accountant Login (shared ledger gate) — shipped 2026-09-17 (M5.1 `cde43b5`, M5.2–M5.4 `df3b5de`, 53/53 green, user acceptance)
 
 ### Active Milestone Task Breakdown
 Track tasks using atomic checklists (`[x]` Done, `[/]` In Progress, `[ ]` Queued, `[!]` Blocked):
@@ -48,15 +48,16 @@ Track tasks using atomic checklists (`[x]` Done, `[/]` In Progress, `[ ]` Queued
 - [x] TASK-2026-09-17-auth-multi-user M5.1 Schema + seed + domain (p0) — done 2026-09-17 (User/Session + bcryptjs @3.0.3 + opaque token, `cde43b5`, 53/53 green)
 - [x] TASK-2026-09-17-auth-multi-user M5.2 Actions + middleware gate (p0) — done 2026-09-17 (login/logout + middleware 307 + `/login` + `Proxy`, smoke 307/200)
 - [x] TASK-2026-09-17-auth-multi-user M5.3 Wiring + regression (p1) — done 2026-09-17 (requireSession on all actions 20 sites, 53/53 green, build `ƒ` all protected)
-- [ ] TASK-2026-09-17-auth-multi-user M5.4 Hardening + verify (p2) — queued 2026-09-17 (cookie audit + curl matrix + .env hygiene)
+- [x] TASK-2026-09-17-auth-multi-user M5.4 Hardening + verify (p2) — done 2026-09-17 (cookie `httpOnly`/`SameSite`/`Secure` + 20× `requireSession` + curl 7×307 3×200 receipt 307/200 + `.env.example` placeholder, 53/53 green)
+- [x] Manual acceptance M5 (owner: user): login `owner@ledgercraft.local` → Sign out → gated 307 → bad pass `invalid_credentials` — accepted 2026-09-17
 
 ---
 
 ## 3. Active Working Set
 - **Target Workspace / Package (if Monorepo)**: standalone (N/A)
-- **Active RFC / Spec**: `docs/specs/2026-09-17-spec-auth-multi-user.md` (`PLAN-auth-multi-user`, Full, `ready` 2026-09-17 — M5 accountant login, accountant pain)
-- **Active Task Spec**: `docs/tasks/TASK-2026-09-17-auth-multi-user.md` (`in_progress` M5.1–M5.3; TDD `disabled`)
-- **Key Source Files in Flight**: `src/actions/auth.ts`, `src/middleware.ts`, `src/app/login/**`, `src/actions/ledger.ts`, `src/actions/invoicing.ts`, `src/actions/imports.ts` (M5.2+M5.3 landed)
+- **Active RFC / Spec**: none (M5 spec sealed: `docs/specs/2026-09-17-spec-auth-multi-user.md`)
+- **Active Task Spec**: none (M5 Task Record completed at `df3b5de`; TDD `disabled`)
+- **Key Source Files in Flight**: none (all landed at `df3b5de`)
 - **Verification Commands (Scoped)**:
   - Unit Tests: `bun test` (53 pass / 0 fail 2026-09-17)
   - Typecheck: `bunx tsc --noEmit` (green 2026-09-17)
@@ -74,21 +75,21 @@ Track tasks using atomic checklists (`[x]` Done, `[/]` In Progress, `[ ]` Queued
 - **Task Record**: `docs/tasks/TASK-2026-09-17-auth-multi-user.md`
 - **Specification**: `docs/specs/2026-09-17-spec-auth-multi-user.md`
 - **Execution Scope**: `Repository standalone (single Next.js app + local SQLite)`
-- **Execution State**: `in_progress`
-- **Mapped `pk:tasks` Status**: `In Progress`
-- **Active Task Pointer**: `TASK-2026-09-17-auth-multi-user`
-- **Owner / Current Actor**: `Assistant (M5.1)`
+- **Execution State**: `completed`
+- **Mapped `pk:tasks` Status**: `Done`
+- **Active Task Pointer**: `None`
+- **Owner / Current Actor**: `user (solo maintainer) / Assistant (M5 shipped)`
 - **Start Time**: `2026-09-17 UTC`
 - **Current Branch**: `main`
-- **Current Revision**: `9c36976`
+- **Current Revision**: `df3b5de`
 - **Checkpoint Policy**: `Soft ~60m, hard ≤90m; event-driven on milestone/task/scope/handoff/compaction`
-- **Blockers and Resume Condition**: `None`
-- **Verification Status**: `bun test 53/0 + tsc clean + lint clean + build 11 routes 2026-09-17 (M5.1); gate: bun test + tsc + lint + build + curl matrix`
+- **Blockers and Resume Condition**: `None — M5 shipped, user accepted 2026-09-17`
+- **Verification Status**: `bun test 53/0 + tsc clean + lint clean + build 11 routes Proxy 2026-09-17; curl 7×307 3×200 receipt 307/200 post-logout 307`
 - **CI Evidence**: `N/A`
-- **Changed-File Summary**: `M5.1 landed: prisma/schema User/Session + bcryptjs domain + auth.test.ts (53/53)`
+- **Changed-File Summary**: `M5 shipped: prisma/schema User/Session + lib/auth+session+auth.test + actions/auth+ledger+invoicing+imports + middleware Proxy + login page/components + header (20 requireSession, 53/53)`
 - **Latest Checkpoint**: `None`
 - **Latest Handoff**: `None`
-- **Next Action**: `Build M5.2 Actions + middleware gate`
+- **Next Action**: `None — M5 complete; Later ledger remains: multi-currency, Stripe`
 
 ---
 
@@ -128,15 +129,15 @@ Staging area for rules observed during sessions but not yet approved as invarian
 ---
 
 ## 5. Known Blockers, Risks & Open Questions
-- **Blockers**: none (M5 `in_progress` M5.1 done — next M5.2)
+- **Blockers**: none
 - **Architectural Questions**:
-  - M5 scoped as auth/multi-user (accountant login, shared ledger gate) — built from `PLAN-auth-multi-user`; multi-currency + Stripe remain as Later remainder.
+  - Later ledger remainder scoped (multi-currency, Stripe) — needs `pk:plan` for Milestone 6.
   - Remote/GitHub setup open (no remote; `pk:pr` blocked until remote added — `tracking: github` in `PROMPTKIT.md` but local record is authoritative).
 - **Technical Debt & Risks**:
   - Pre-existing init dirt untracked (`.clinerules/`, `.github/`, `.gitmodules`, `.opencode/`, `.promptkit/`, `AGENTS.md`) — surfaced, never staged; decide keep/commit separately.
   - Generated Prisma client (`src/generated/`) gitignored — fresh clones must run `bunx prisma generate`.
   - INV-04 evolution in M5: "no auth, local single-owner" → "auth wall, shared ledger (2 users), still local SQLite"; row-level tenant isolation deferred — track as risk if accountant read-only is needed (see `ASSUMPTION-auth-multi-user-002`).
-- **Later ledger (deferred, not backlog)**: multi-currency auto-conversion, Stripe webhooks. Shipped out of it: invoicing + clients (M2), bank CSV imports (M3), PDF receipts via browser print (M4), auth/multi-user now M5 scoped.
+- **Later ledger (deferred, not backlog)**: multi-currency auto-conversion, Stripe webhooks. Shipped out of it: invoicing + clients (M2), bank CSV imports (M3), PDF receipts via browser print (M4), auth/multi-user (M5).
 
 ---
 
@@ -148,10 +149,9 @@ Staging area for rules observed during sessions but not yet approved as invarian
 ---
 
 ## 7. Next Immediate Actions (Queued)
-1. Build M5.2 Actions + middleware gate (login/logout + `src/middleware.ts` + `/login` → AC-1/AC-2).
-2. Then M5.3 wiring + regression (`requireSession` on all actions, 53+ green) → M5.4 hardening + verify.
-3. Optional: add git remote + `pk:pr` for review; decide fate of untracked init dirt.
-4. `bun dev` daily driver (`:3000` fresh): journal at `/journal`, invoices at `/invoices` (+ receipts at `/invoices/[id]`), imports at `/imports`, reports at `/trial-balance` + `/profit-loss` — all behind 302 to `/login` once M5.2 lands.
+1. Define Milestone 6 scope (`pk:plan` — multi-currency vs Stripe; both remain in Later ledger).
+2. Optional: add git remote + `pk:pr` for review; decide fate of untracked init dirt.
+3. `bun dev` daily driver (`:3000`): login at `/login` (owner@ledgercraft.local), then journal at `/journal`, invoices at `/invoices` (+ receipts at `/invoices/[id]`), imports at `/imports`, reports at `/trial-balance` + `/profit-loss` — all behind auth wall.
 
 ---
 
@@ -165,6 +165,7 @@ Compact record of pairing sessions to enable instant chat resumption:
 | 2026-09-17 | Assistant (pk:plan→tasks→build→commit) | Milestone 2 Clients + Invoicing (completed) | PLAN-invoicing + Task Record; T1 schema, T2 engine + 13 tests, T3 /clients + /invoices UI, T4 hardening (float-display fix); 30/30 green; commits `b2f9e1f` + `1e3361f`; user acceptance |
 | 2026-09-17 | Assistant (pk:plan→tasks→build→commit→checkpoint) | Milestone 3 Bank CSV Import (completed) | PLAN-csv-import + Task Record; M3.1 ImportBatch, M3.2 csvImport.ts + 14 tests, M3.3 /imports UI, M3.4 hardening; 44/44 green; stale :3000 replaced (approved); commits `bcf62fa` + `539de27`; checkpoint/handoff `-01`; user acceptance |
 | 2026-09-17 | Assistant (pk:plan→build→commit→checkpoint) | Milestone 4 Invoice PDF Receipts (completed) | PLAN-pdf-receipts (Minimal, L1); M4.1 receipt route + view, M4.2 print CSS + button + links, M4.3 hardening; 44/44 green, tsc/lint clean, build 10 routes; commit `9c36976`; running :3000 left on pre-M4 (restart needed) |
+| 2026-09-17 | Assistant (pk:plan→tasks→build→commit) | Milestone 5 Auth / Multi-User (completed) | PLAN-auth-multi-user (Full) + Task Record; M5.1 User/Session + bcryptjs + 9 tests, M5.2 login/logout + Proxy 307 + /login, M5.3 requireSession 20 sites, M5.4 hardening curl 7×307 3×200; 53/53 green, tsc/lint/build green; commits `cde43b5` + `df3b5de`; user acceptance |
 
 ---
 

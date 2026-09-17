@@ -80,12 +80,12 @@
 
 ## 5. State and Active Ownership
 
-- **Execution State**: `in_progress`
-- **Mapped `pk:tasks` Status**: `In Progress`
-- **Active Task Pointer**: `TASK-2026-09-17-auth-multi-user`
+- **Execution State**: `completed`
+- **Mapped `pk:tasks` Status**: `Done`
+- **Active Task Pointer**: `None`
 - **Start Time**: `2026-09-17 UTC`
-- **Current Actor**: `Assistant (M5.4 hardening)`
-- **Next Action**: `Commit M5.2–M5.4 + final STATE sync, then await user acceptance`
+- **Current Actor**: `Assistant (M5 shipped)`
+- **Next Action**: `None — M5 complete; Later ledger remains: multi-currency, Stripe`
 
 ### Transition History
 
@@ -94,6 +94,7 @@
 | `N/A` | `planned` | `2026-09-17 UTC` | `Assistant (pk:tasks)` | `Record created from PLAN-auth-multi-user` | `docs/specs/2026-09-17-spec-auth-multi-user.md` |
 | `planned` | `ready` | `2026-09-17 UTC` | `Assistant (pk:tasks)` | `Objective, scope, AC, dependencies, risk, verification, invariants complete — awaiting in_progress approval` | `this record §2–§4` |
 | `ready` | `in_progress` | `2026-09-17 UTC` | `Assistant (M5.1)` | `User approved in_progress — begin M5.1 Schema + seed + domain` | `user reply "1"` |
+| `in_progress` | `completed` | `2026-09-17 UTC` | `Assistant (M5 shipped)` | `M5.1–M5.4 + user acceptance — 53/53 green` | `user reply "accepted"` |
 
 ### Atomic Breakdown (1–4h each, dependency order)
 
@@ -129,14 +130,14 @@ Invariants locked: INV-01 balanced fail-closed, INV-02 integer cents, INV-03 app
 - **TDD Exception Verification [Required for Documentation, Configuration, or Research Work; Not applicable for Code Work]**: `N/A - Code Work`
 - **CI Evidence**: `N/A`
 - **Review Evidence**: `N/A`
-- **Commit Evidence**: `cde43b5 feat(auth): M5.1 schema + seed + domain; pending M5.2–M5.4 commit`
+- **Commit Evidence**: `cde43b5 feat(auth): M5.1 schema + seed + domain; df3b5de feat(auth): M5.2-M5.4 gate + login UI + wiring`
 - **Pull Request Evidence**: `N/A (no remote)`
 - **Release Evidence**: `N/A`
-- **Blocker and Resume Condition**: `None — awaiting user acceptance for M5 ship`
+- **Blocker and Resume Condition**: `None — accepted 2026-09-17`
 
-- **Completion State**: `awaiting_review`
+- **Completion State**: `completed`
 - **Acceptance Results**: `AC-1 Pass, AC-2 Pass, AC-3 Pass, AC-4 Pass, AC-5 Pass (5/5)`
-- **Changed-File Summary**: `prisma schema+migration + lib/auth+session+auth.test + actions/auth+ledger+invoicing+imports + middleware Proxy + login page/components + page header + .env.example (20 requireSession sites)`
+- **Changed-File Summary**: `prisma schema+migration + lib/auth+session+auth.test + actions/auth+ledger+invoicing+imports + middleware Proxy + login page/components + header (20 requireSession, 53/53)`
 - **Completion Exception**: `None`
-- **Completion Decision and Timestamp**: `Pending user acceptance 2026-09-17`
+- **Completion Decision and Timestamp**: `Completed 2026-09-17 UTC — user accepted`
 
