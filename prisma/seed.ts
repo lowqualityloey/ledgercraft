@@ -1,5 +1,6 @@
-// LedgerCraft CoA seed — intake codes (idempotent via code upsert)
+// LedgerCraft CoA seed — intake codes + M5 auth users (idempotent)
 import { db } from "../src/lib/db";
+import { hashPassword } from "../src/lib/auth";
 
 const ACCOUNTS = [
   { code: "1000", name: "Cash / Bank", type: "ASSET" },
@@ -29,4 +30,34 @@ for (const a of ACCOUNTS) {
 
 const count = await db.account.count();
 console.log(`Seeded CoA: ${count} accounts`);
+
+// M5: seed owner + accountant (idempotent upsert, hash once)
+const ownerEmail = process.env.SEED_OWNER_EMAIL ?? "owner@ledgercraft.local";
+const ownerPass = process.env.SEED_OWNER_PASSWORD ?? "owner-pass-123";
+const acctEmail = process.env.SEED_ACCOUNTANT_EMAIL ?? "accountant@ledgercraft.local";
+const acctPass = process.env.SEED_ACCOUNTANT_PASSWORD ?? "acct-pass-12345";
+
+await db.user.upsert({
+  where: { email: ownerEmail },
+  update: {},
+  create: {
+    email: ownerEmail,
+    passwordHash: hashPassword(ownerPass),
+    name: "Owner",
+    role: "OWNER",
+  },
+});
+await db.user.upsert({
+  where: { email: acctEmail },
+  update: {},
+  create: {
+    email: acctEmail,
+    passwordHash: hashPassword(acctPass),
+    name: "Accountant",
+    role: "ACCOUNTANT",
+  },
+});
+const uCount = await db.user.count();
+console.log(`Seeded users: ${uCount} (owner=${ownerEmail}, accountant=${acctEmail})`);
+
 await db.$disconnect();
