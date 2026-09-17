@@ -11,6 +11,10 @@ export interface ReceiptInvoice {
   status: string;
   totalDisplay: string;
   subtotalDisplay: string;
+  baseTotalDisplay?: string;
+  baseSubtotalDisplay?: string;
+  fxLabel?: string | null;
+  currency?: string;
   createdAt: Date;
   client: { name: string; email: string };
   lines: ReceiptLine[];
@@ -87,17 +91,27 @@ export function InvoiceReceipt({ invoice }: { invoice: ReceiptInvoice }) {
         <tfoot>
           <tr>
             <td colSpan={3} className="pt-3 text-right text-sm text-zinc-500">
-              Total
+              Total {invoice.currency && invoice.currency !== "USD" ? `(${invoice.currency})` : ""}
             </td>
             <td className="pt-3 text-right font-mono font-semibold tabular-nums">
               {invoice.totalDisplay}
             </td>
           </tr>
+          {invoice.fxLabel && (
+            <tr>
+              <td colSpan={3} className="pt-1 text-right text-xs text-zinc-500">
+                {invoice.fxLabel}
+              </td>
+              <td className="pt-1 text-right font-mono text-xs tabular-nums">{invoice.baseTotalDisplay}</td>
+            </tr>
+          )}
         </tfoot>
       </table>
 
       <p className="mt-4 text-xs text-zinc-500">
-        Amounts in USD from integer cents. Corrections via reversing entries.
+        {invoice.currency && invoice.currency !== "USD"
+          ? `Foreign ${invoice.currency} → base USD via integer cents. Corrections via reversing entries.`
+          : "Amounts in USD from integer cents. Corrections via reversing entries."}
       </p>
     </section>
   );

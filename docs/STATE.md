@@ -2,11 +2,11 @@
 
 ## 1. Executive Summary & Current Position
 - **Project Name**: LedgerCraft
-- **Current Milestone / Epic**: Milestones 1–5 shipped (2026-09-17) → Next: Later ledger remainder (multi-currency, Stripe) TBD via `pk:plan`
+- **Current Milestone / Epic**: Milestones 1–5 shipped (2026-09-17) → Milestone 6 Multi-Currency scoped (`PLAN-multi-currency` + Task Record `ready` 2026-09-17)
 - **Overall Status**: ACTIVE <!-- Options: ACTIVE | PAUSED | STABILIZING | RELEASE_CANDIDATE | COMPLETED (all milestones closed, release evidence archived, zero open blockers — recording stops here) -->
 - **Target Release / Deadline**: none (local-only)
-- **Current Working Branch**: main (`df3b5de`)
-- **Last Updated**: 2026-09-17 (M5 shipped — auth gate + login + wiring + hardening, 53/53 green, user acceptance)
+- **Current Working Branch**: main (`edb4f30`)
+- **Last Updated**: 2026-09-17 (M6 scoped — FX `Currency` + `fxRateBps` + `convertCents`, `ready` awaiting build)
 
 ---
 
@@ -19,6 +19,7 @@
 - [x] **Milestone 3**: Bank CSV Import (drafts + balanced post + dedup) — shipped 2026-09-17 (M3.1–M3.4 + user acceptance, `539de27`)
 - [x] **Milestone 4**: Invoice PDF Receipts (read-only receipt + browser print CSS, zero deps) — shipped 2026-09-17 (M4.1–M4.3 + spec, `9c36976`)
 - [x] **Milestone 5**: Auth / Multi-User Accountant Login (shared ledger gate) — shipped 2026-09-17 (M5.1 `cde43b5`, M5.2–M5.4 `df3b5de`, 53/53 green, user acceptance)
+- [ ] **Milestone 6**: Multi-Currency Foreign Invoices (Base USD) — scoped 2026-09-17 (`PLAN-multi-currency` + `TASK-2026-09-17-multi-currency` `ready`); Later remainder → Stripe
 
 ### Active Milestone Task Breakdown
 Track tasks using atomic checklists (`[x]` Done, `[/]` In Progress, `[ ]` Queued, `[!]` Blocked):
@@ -50,16 +51,20 @@ Track tasks using atomic checklists (`[x]` Done, `[/]` In Progress, `[ ]` Queued
 - [x] TASK-2026-09-17-auth-multi-user M5.3 Wiring + regression (p1) — done 2026-09-17 (requireSession on all actions 20 sites, 53/53 green, build `ƒ` all protected)
 - [x] TASK-2026-09-17-auth-multi-user M5.4 Hardening + verify (p2) — done 2026-09-17 (cookie `httpOnly`/`SameSite`/`Secure` + 20× `requireSession` + curl 7×307 3×200 receipt 307/200 + `.env.example` placeholder, 53/53 green)
 - [x] Manual acceptance M5 (owner: user): login `owner@ledgercraft.local` → Sign out → gated 307 → bad pass `invalid_credentials` — accepted 2026-09-17
+- [ ] TASK-2026-09-17-multi-currency M6.1 Schema + money (p0) — queued 2026-09-17 (`Currency` + `convertCents`)
+- [ ] TASK-2026-09-17-multi-currency M6.2 Engine + tests (p0) — queued 2026-09-17 (FX-aware postInvoice)
+- [ ] TASK-2026-09-17-multi-currency M6.3 UI + receipt (p1) — queued 2026-09-17 (form select + rate + dual display)
+- [ ] TASK-2026-09-17-multi-currency M6.4 Hardening + verify (p2) — queued 2026-09-17 (no float grep + TB balanced)
 
 ---
 
 ## 3. Active Working Set
 - **Target Workspace / Package (if Monorepo)**: standalone (N/A)
-- **Active RFC / Spec**: none (M5 spec sealed: `docs/specs/2026-09-17-spec-auth-multi-user.md`)
-- **Active Task Spec**: none (M5 Task Record completed at `df3b5de`; TDD `disabled`)
-- **Key Source Files in Flight**: none (all landed at `df3b5de`)
+- **Active RFC / Spec**: `docs/specs/2026-09-17-spec-multi-currency.md` (`PLAN-multi-currency`, Full, `ready` 2026-09-17 — M6 foreign invoicing EUR/GBP)
+- **Active Task Spec**: `docs/tasks/TASK-2026-09-17-multi-currency.md` (`ready` — awaiting approval to `in_progress`; TDD `disabled`)
+- **Key Source Files in Flight**: none yet (next: `prisma/schema.prisma`, `src/lib/money.ts`, `src/lib/invoicing.ts`, `src/components/InvoiceForm.tsx`)
 - **Verification Commands (Scoped)**:
-  - Unit Tests: `bun test` (53 pass / 0 fail 2026-09-17)
+  - Unit Tests: `bun test` (53 pass / 0 fail 2026-09-17; M6 will be 53+ new)
   - Typecheck: `bunx tsc --noEmit` (green 2026-09-17)
   - Linter: `bun run lint` (green 2026-09-17)
   - Build: `bun run build` (OK 2026-09-17, 11 routes + `ƒ Proxy (Middleware)`, all protected `ƒ`)
@@ -70,26 +75,26 @@ Track tasks using atomic checklists (`[x]` Done, `[/]` In Progress, `[ ]` Queued
 
 > This section is a synchronized projection for checkpoint continuity when the host project uses Controlled Work. The canonical authority remains `docs/tasks/<task-id>.md`; disagreement with that record is a validation failure and leaves execution blocked or `checkpoint_due` until reconciled.
 
-- **Local Task Source**: `docs/tasks/TASK-2026-09-17-auth-multi-user.md`
-- **Task ID**: `TASK-2026-09-17-auth-multi-user`
-- **Task Record**: `docs/tasks/TASK-2026-09-17-auth-multi-user.md`
-- **Specification**: `docs/specs/2026-09-17-spec-auth-multi-user.md`
+- **Local Task Source**: `docs/tasks/TASK-2026-09-17-multi-currency.md`
+- **Task ID**: `TASK-2026-09-17-multi-currency`
+- **Task Record**: `docs/tasks/TASK-2026-09-17-multi-currency.md`
+- **Specification**: `docs/specs/2026-09-17-spec-multi-currency.md`
 - **Execution Scope**: `Repository standalone (single Next.js app + local SQLite)`
-- **Execution State**: `completed`
-- **Mapped `pk:tasks` Status**: `Done`
+- **Execution State**: `ready`
+- **Mapped `pk:tasks` Status**: `To Do`
 - **Active Task Pointer**: `None`
-- **Owner / Current Actor**: `user (solo maintainer) / Assistant (M5 shipped)`
-- **Start Time**: `2026-09-17 UTC`
+- **Owner / Current Actor**: `user (solo freelancer, M6 approver) / Assistant (pk:tasks)`
+- **Start Time**: `N/A`
 - **Current Branch**: `main`
-- **Current Revision**: `df3b5de`
+- **Current Revision**: `edb4f30`
 - **Checkpoint Policy**: `Soft ~60m, hard ≤90m; event-driven on milestone/task/scope/handoff/compaction`
-- **Blockers and Resume Condition**: `None — M5 shipped, user accepted 2026-09-17`
-- **Verification Status**: `bun test 53/0 + tsc clean + lint clean + build 11 routes Proxy 2026-09-17; curl 7×307 3×200 receipt 307/200 post-logout 307`
+- **Blockers and Resume Condition**: `None — awaiting explicit approval to enter in_progress`
+- **Verification Status**: `bun test 53/0 + tsc clean + lint clean + build 11 routes Proxy 2026-09-17 (pre-M6); M6 gate: bun test + tsc + lint + build + curl EUR/USD`
 - **CI Evidence**: `N/A`
-- **Changed-File Summary**: `M5 shipped: prisma/schema User/Session + lib/auth+session+auth.test + actions/auth+ledger+invoicing+imports + middleware Proxy + login page/components + header (20 requireSession, 53/53)`
+- **Changed-File Summary**: `Pending M6.1–M6.4 (Currency + convertCents + FX-aware postInvoice + form dual)`
 - **Latest Checkpoint**: `None`
 - **Latest Handoff**: `None`
-- **Next Action**: `None — M5 complete; Later ledger remains: multi-currency, Stripe`
+- **Next Action**: `Await approval to set TASK-2026-09-17-multi-currency → in_progress and build M6.1`
 
 ---
 
@@ -129,15 +134,16 @@ Staging area for rules observed during sessions but not yet approved as invarian
 ---
 
 ## 5. Known Blockers, Risks & Open Questions
-- **Blockers**: none
+- **Blockers**: none (M6 `ready` — blocked only on explicit approval to start build)
 - **Architectural Questions**:
-  - Later ledger remainder scoped (multi-currency, Stripe) — needs `pk:plan` for Milestone 6.
+  - M6 scoped as Multi-Currency (EUR/GBP foreign invoices, Base USD, manual `fxRateBps`) — built from `PLAN-multi-currency`; Stripe remains as Later remainder.
   - Remote/GitHub setup open (no remote; `pk:pr` blocked until remote added — `tracking: github` in `PROMPTKIT.md` but local record is authoritative).
 - **Technical Debt & Risks**:
   - Pre-existing init dirt untracked (`.clinerules/`, `.github/`, `.gitmodules`, `.opencode/`, `.promptkit/`, `AGENTS.md`) — surfaced, never staged; decide keep/commit separately.
   - Generated Prisma client (`src/generated/`) gitignored — fresh clones must run `bunx prisma generate`.
   - INV-04 evolution in M5: "no auth, local single-owner" → "auth wall, shared ledger (2 users), still local SQLite"; row-level tenant isolation deferred — track as risk if accountant read-only is needed (see `ASSUMPTION-auth-multi-user-002`).
-- **Later ledger (deferred, not backlog)**: multi-currency auto-conversion, Stripe webhooks. Shipped out of it: invoicing + clients (M2), bank CSV imports (M3), PDF receipts via browser print (M4), auth/multi-user (M5).
+  - INV-02 guard for M6: FX must stay integer `convertCents` — no float; see `DECISION-multi-currency-001`.
+- **Later ledger (deferred, not backlog)**: Stripe webhooks (remaining). Shipped out of it: invoicing + clients (M2), bank CSV imports (M3), PDF receipts via browser print (M4), auth/multi-user (M5), multi-currency now M6 scoped.
 
 ---
 
@@ -149,9 +155,9 @@ Staging area for rules observed during sessions but not yet approved as invarian
 ---
 
 ## 7. Next Immediate Actions (Queued)
-1. Define Milestone 6 scope (`pk:plan` — multi-currency vs Stripe; both remain in Later ledger).
+1. Build M6 Multi-Currency (`TASK-2026-09-17-multi-currency` `ready` → await approval → M6.1 schema+money → M6.2 engine → M6.3 UI+receipt → M6.4 hardening).
 2. Optional: add git remote + `pk:pr` for review; decide fate of untracked init dirt.
-3. `bun dev` daily driver (`:3000`): login at `/login` (owner@ledgercraft.local), then journal at `/journal`, invoices at `/invoices` (+ receipts at `/invoices/[id]`), imports at `/imports`, reports at `/trial-balance` + `/profit-loss` — all behind auth wall.
+3. `bun dev` daily driver (`:3000`): login at `/login`, then journal at `/journal`, invoices at `/invoices` (+ receipts with EUR→USD), imports at `/imports`, reports at `/trial-balance` + `/profit-loss` — all behind auth wall.
 
 ---
 

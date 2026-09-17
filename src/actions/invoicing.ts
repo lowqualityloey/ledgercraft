@@ -14,7 +14,12 @@ import {
   voidInvoice,
 } from "@/lib/invoicing";
 import { db } from "@/lib/db";
-import { formatCents, parseDollarsToCents } from "@/lib/money";
+import {
+  CurrencySchema,
+  formatCents,
+  parseDollarsToCents,
+  parseFxRateToBps,
+} from "@/lib/money";
 import { requireSession } from "@/lib/session";
 import type { ActionResult } from "./ledger";
 
@@ -87,13 +92,19 @@ export async function createInvoiceAction(input: {
   clientId: string;
   number: string;
   issueDate: string;
+  currency?: string;
+  fxRate?: string;
   lines: InvoiceFormLine[];
 }): Promise<ActionResult<{ invoiceId: string }>> {
   await requireSession();
   try {
+    const currency = input.currency ? CurrencySchema.parse(input.currency) : undefined;
+    const fxRateBps = input.fxRate ? parseFxRateToBps(input.fxRate) : undefined;
     const inv = await postInvoice({
       clientId: input.clientId,
       number: input.number.trim(),
+      currency: currency as never,
+      fxRateBps: fxRateBps as never,
       issueDate: new Date(input.issueDate).toISOString(),
       idempotencyKey: crypto.randomUUID().replace(/-/g, "").slice(0, 32),
       lines: input.lines.map((l) => ({
@@ -156,12 +167,16 @@ export async function listInvoices() {
   return invoices.map((i) => ({
     ...i,
     totalDisplay: formatCents(i.totalCents),
+    baseDisplay: formatCents((i as unknown as { baseTotalCents: number }).baseTotalCents ?? i.totalCents),
+    fxLabel: (i as unknown as { currency: string; fxRateBps: number }).currency !== "USD"
+      ? `${(i as unknown as { currency: string }).currency} ${formatCents(i.totalCents)} → USD ${formatCents((i as unknown as { baseTotalCents: number }).baseTotalCents ?? i.totalCents)}`
+      : null,
   }));
 }
 
 // M4: read-only receipt fetch. Validates id at the boundary; money
 // formatting stays in integer cents (INV-02). Returns null when missing
-// so the route can call notFound().
+// so the route can call notFound(). M6: dual foreign→base when currency≠USD.
 export async function getInvoiceReceipt(id: string) {
   await requireSession();
   const parsed = z.string().cuid().safeParse(id);
@@ -174,10 +189,20 @@ export async function getInvoiceReceipt(id: string) {
     },
   });
   if (!invoice) return null;
+  const inv = invoice as unknown as {
+    currency: string;
+    fxRateBps: number;
+    baseSubtotalCents: number;
+    baseTotalCents: number;
+  } & typeof invoice;
+  const isForeign = inv.currency !== "USD";
   return {
     ...invoice,
     totalDisplay: formatCents(invoice.totalCents),
     subtotalDisplay: formatCents(invoice.subtotalCents),
+    baseTotalDisplay: formatCents(inv.baseTotalCents ?? invoice.totalCents),
+    baseSubtotalDisplay: formatCents(inv.baseSubtotalCents ?? invoice.subtotalCents),
+    fxLabel: isForeign ? `${inv.currency} ${formatCents(invoice.totalCents)} → USD ${formatCents(inv.baseTotalCents ?? invoice.totalCents)} @${(inv.fxRateBps / 10000).toFixed(4)}` : null,
     lines: invoice.lines.map((l) => ({
       ...l,
       unitDisplay: formatCents(l.unitCents),
