@@ -2,11 +2,11 @@
 
 ## 1. Executive Summary & Current Position
 - **Project Name**: LedgerCraft
-- **Current Milestone / Epic**: Milestone 0: Intake Baseline (Phase 0 complete) → Next: Milestone 1 Core Ledger via `pk:plan`
+- **Current Milestone / Epic**: Milestone 2 planned (Clients + Invoicing) — `PLAN-invoicing` draft + Task Record ready
 - **Overall Status**: ACTIVE <!-- Options: ACTIVE | PAUSED | STABILIZING | RELEASE_CANDIDATE | COMPLETED (all milestones closed, release evidence archived, zero open blockers — recording stops here) -->
-- **Target Release / Deadline**: none (local-only Phase 0)
+- **Target Release / Deadline**: none (local-only)
 - **Current Working Branch**: main
-- **Last Updated**: 2026-09-17
+- **Last Updated**: 2026-09-17 (M2 planned)
 
 ---
 
@@ -14,7 +14,8 @@
 
 ### Milestone Roadmap
 - [x] **Milestone 0**: Phase 0 Intake Baseline — MVP floor + Later ledger + invariants locked (2026-09-17)
-- [x] **Milestone 1**: Core Ledger Engine (CoA + balanced journal + TB/P&L) — completed 2026-09-17 (`9a4f250`, `8484fc6`)
+- [x] **Milestone 1**: Core Ledger Engine (CoA + balanced journal + TB/P&L) — completed 2026-09-17 (`9a4f250` product, `6dc9529` docs)
+- [ ] **Milestone 2**: Clients + Invoicing (accrual, full-pay) — planned 2026-09-17 (`PLAN-invoicing` + `TASK-2026-09-17-invoicing`)
 
 ### Active Milestone Task Breakdown
 Track tasks using atomic checklists (`[x]` Done, `[/]` In Progress, `[ ]` Queued, `[!]` Blocked):
@@ -26,15 +27,19 @@ Track tasks using atomic checklists (`[x]` Done, `[/]` In Progress, `[ ]` Queued
 - [x] TASK-2026-09-17-core-ledger T5: Actions + Journal Form (p1) — build green 2026-09-17
 - [x] TASK-2026-09-17-core-ledger T6: TB + P&L (p1) — 8/8 routes 2026-09-17
 - [x] TASK-2026-09-17-core-ledger T7: Hardening + verify (p2) — grep clean, smoke 5/5 2026-09-17
+- [ ] TASK-2026-09-17-invoicing T1: Schema + seed refs (p0) — planned
+- [ ] TASK-2026-09-17-invoicing T2: Engine + unit tests (p0) — planned
+- [ ] TASK-2026-09-17-invoicing T3: Actions + UI (p1) — planned
+- [ ] TASK-2026-09-17-invoicing T4: Reports wiring + hardening (p2) — planned
 - [x] Manual acceptance (owner: user): expense + client payment posted, Trial Balance balances — accepted 2026-09-17
 
 ---
 
 ## 3. Active Working Set
 - **Target Workspace / Package (if Monorepo)**: standalone (N/A)
-- **Active RFC / Spec**: `docs/specs/2026-09-17-spec-core-ledger.md` (Draft, Full; intake: `docs/specs/2026-09-17-intake-ledgercraft.md`)
-- **Active Task Spec**: `docs/tasks/TASK-2026-09-17-core-ledger.md` (planned, TDD disabled)
-- **Key Source Files in Flight**: `src/lib/ledger.ts`, `src/actions/ledger.ts`, `src/components/JournalForm.tsx`, `src/components/JournalEntries.tsx`, `src/app/journal/page.tsx`, `prisma/schema.prisma` (applied)
+- **Active RFC / Spec**: `docs/specs/2026-09-17-spec-invoicing.md` (PLAN-invoicing draft)
+- **Active Task Spec**: `docs/tasks/TASK-2026-09-17-invoicing.md` (planned, TDD disabled)
+- **Key Source Files in Flight**: none (all landed at `6dc9529`)
 - **Verification Commands (Scoped)**:
   - Unit Tests: `bun test` (17 pass / 0 fail 2026-09-17)
   - Typecheck: `bunx tsc --noEmit` (green 2026-09-17)
@@ -108,9 +113,11 @@ Staging area for rules observed during sessions but not yet approved as invarian
 ## 5. Known Blockers, Risks & Open Questions
 - **Blockers**: none
 - **Architectural Questions**:
-  - Confirm size stays `medium` vs downgrade to `small` during `pk:plan` (ASSUMPTION-03).
-  - Prisma schema + Server Action boundaries to be designed in `pk:plan` (no code yet).
-- **Technical Debt & Risks**: none (greenfield, no code)
+  - Milestone 2 scope open (Later ledger candidates: invoicing, clients, PDF, CSV imports, auth/multi-user, multi-currency, Stripe) — needs `pk:plan`.
+  - Remote/GitHub setup open (no remote; `pk:pr` blocked until remote added).
+- **Technical Debt & Risks**:
+  - Pre-existing init dirt untracked (`.clinerules/`, `.github/`, `.gitmodules`, `.opencode/`, `.promptkit/`, `AGENTS.md`) — surfaced, never staged; decide keep/commit separately.
+  - Generated Prisma client (`src/generated/`) gitignored — fresh clones must run `bunx prisma generate`.
 - **Later ledger (deferred, not backlog)**: invoicing, clients, PDF generation, bank CSV imports, auth/multi-user, multi-currency auto-conversion, Stripe webhooks.
 
 ---
@@ -123,9 +130,9 @@ Staging area for rules observed during sessions but not yet approved as invarian
 ---
 
 ## 7. Next Immediate Actions (Queued)
-1. Run `pk:plan` for Milestone 1 (CoA + balanced journal + TB/P&L, SQLite/Prisma schema, Server Actions, validation + reversal design).
-2. Then `pk:tasks` to decompose Milestone 1 into atomic tasks.
-3. Scaffold Next.js + Prisma + bun (creates package.json, prisma/schema.prisma) — pending plan approval.
+1. Define Milestone 2 scope, then `pk:plan` → `pk:tasks` (Later ledger candidates above).
+2. Optional: add git remote + `pk:pr` for review; decide fate of untracked init dirt.
+3. `bun dev` daily driver: journal at `/journal`, reports at `/trial-balance` + `/profit-loss`.
 
 ---
 
@@ -135,6 +142,7 @@ Compact record of pairing sessions to enable instant chat resumption:
 | Date | Engineer / Agent | Milestone / Focus | Key Changes & Artifacts |
 | :--- | :--- | :--- | :--- |
 | 2026-09-17 | Assistant (pk:onboard) | Project Intake (Greenfield Phase 0) | Generated intake `docs/specs/2026-09-17-intake-ledgercraft.md`, updated PROMPTKIT.md (medium/complete), initialized STATE.md baseline |
+| 2026-09-17 | Assistant (pk:plan→tasks→build→commit) | Milestone 1 Core Ledger (completed) | Spec + Task Record; T1–T7 (scaffold, migration+seed, contracts, engine, UI, reports, hardening); 17 tests green; commits `9a4f250` + `6dc9529`; checkpoint/handoff `-01` |
 
 ---
 
@@ -142,6 +150,6 @@ Compact record of pairing sessions to enable instant chat resumption:
 
 | Session | Turns | Measured in/out | Estimated payload | Note |
 | :--- | :--- | :--- | :--- | :--- |
-| not tracked | not tracked | not tracked | not tracked | not tracked |
+| 2026-09-17 (onboard→M1 ship) | ~14 turns | ~48k in / ~14k out (est.) | ~7.5k–16.7k tok/turn | OpenCode CLI · Full M1 build in 1 session (intake, spec, 7 tasks, 2 commits, checkpoint) |
 
-- **Running total**: not tracked — refreshed by `pk:checkpoint`; one row per real work session (trivial sessions under ~5 turns with no workflow usage write nothing).
+- **Running total**: ~14 turns (1 session) — ~62k total tokens estimated across M1 lifecycle.
