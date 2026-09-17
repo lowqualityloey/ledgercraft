@@ -15,6 +15,7 @@ import {
 } from "@/lib/invoicing";
 import { db } from "@/lib/db";
 import { formatCents, parseDollarsToCents } from "@/lib/money";
+import { requireSession } from "@/lib/session";
 import type { ActionResult } from "./ledger";
 
 function toError(e: unknown): string {
@@ -41,6 +42,7 @@ function touch() {
 }
 
 export async function listClients() {
+  await requireSession();
   return db.client.findMany({
     orderBy: { createdAt: "desc" },
     include: {
@@ -55,6 +57,7 @@ export async function createClientAction(input: {
   email: string;
   notes?: string;
 }): Promise<ActionResult<{ clientId: string }>> {
+  await requireSession();
   try {
     const c = await createClient({
       name: input.name.trim(),
@@ -75,6 +78,7 @@ export interface InvoiceFormLine {
 }
 
 export async function suggestInvoiceNumber(): Promise<string> {
+  await requireSession();
   const count = await db.invoice.count();
   return `INV-${String(count + 1).padStart(4, "0")}`;
 }
@@ -85,6 +89,7 @@ export async function createInvoiceAction(input: {
   issueDate: string;
   lines: InvoiceFormLine[];
 }): Promise<ActionResult<{ invoiceId: string }>> {
+  await requireSession();
   try {
     const inv = await postInvoice({
       clientId: input.clientId,
@@ -108,6 +113,7 @@ export async function createInvoiceAction(input: {
 export async function payInvoiceAction(input: {
   invoiceId: string;
 }): Promise<ActionResult<{ invoiceId: string }>> {
+  await requireSession();
   try {
     const inv = await markPaid({
       invoiceId: input.invoiceId,
@@ -124,6 +130,7 @@ export async function voidInvoiceAction(input: {
   invoiceId: string;
   reason: string;
 }): Promise<ActionResult<{ invoiceId: string }>> {
+  await requireSession();
   try {
     const inv = await voidInvoice({
       invoiceId: input.invoiceId,
@@ -138,6 +145,7 @@ export async function voidInvoiceAction(input: {
 }
 
 export async function listInvoices() {
+  await requireSession();
   const invoices = await db.invoice.findMany({
     orderBy: { createdAt: "desc" },
     include: {
@@ -155,6 +163,7 @@ export async function listInvoices() {
 // formatting stays in integer cents (INV-02). Returns null when missing
 // so the route can call notFound().
 export async function getInvoiceReceipt(id: string) {
+  await requireSession();
   const parsed = z.string().cuid().safeParse(id);
   if (!parsed.success) return null;
   const invoice = await db.invoice.findUnique({

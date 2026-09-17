@@ -2,11 +2,11 @@
 
 ## 1. Executive Summary & Current Position
 - **Project Name**: LedgerCraft
-- **Current Milestone / Epic**: Milestones 1–4 shipped (2026-09-17) → Milestone 5 Auth/Multi-User scoped (PLAN-auth-multi-user + Task Record `ready` 2026-09-17)
+- **Current Milestone / Epic**: Milestones 1–4 shipped (2026-09-17) → Milestone 5 Auth/Multi-User `in_progress` (M5.1 committed `cde43b5`, M5.2 gate + login + M5.3 wiring landed)
 - **Overall Status**: ACTIVE <!-- Options: ACTIVE | PAUSED | STABILIZING | RELEASE_CANDIDATE | COMPLETED (all milestones closed, release evidence archived, zero open blockers — recording stops here) -->
 - **Target Release / Deadline**: none (local-only; M5 local `bun dev` + `AUTH_SECRET` in `.env`)
-- **Current Working Branch**: main (`9c36976` → M5.1 commit pending)
-- **Last Updated**: 2026-09-17 (M5.1 `in_progress` — schema+domain landed, 53/53 green)
+- **Current Working Branch**: main (`cde43b5`)
+- **Last Updated**: 2026-09-17 (M5.3 done — requireSession on all actions, 53/53 green, fresh :3000 gate 307/200)
 
 ---
 
@@ -18,7 +18,7 @@
 - [x] **Milestone 2**: Clients + Invoicing (accrual, full-pay) — shipped 2026-09-17 (T1–T4 + user acceptance, `1e3361f`)
 - [x] **Milestone 3**: Bank CSV Import (drafts + balanced post + dedup) — shipped 2026-09-17 (M3.1–M3.4 + user acceptance, `539de27`)
 - [x] **Milestone 4**: Invoice PDF Receipts (read-only receipt + browser print CSS, zero deps) — shipped 2026-09-17 (M4.1–M4.3 + spec, `9c36976`)
-- [ ] **Milestone 5**: Auth / Multi-User Accountant Login (shared ledger gate) — `in_progress` 2026-09-17 (`PLAN-auth-multi-user` + `TASK-2026-09-17-auth-multi-user` `in_progress` M5.1); Later remainder → multi-currency, Stripe
+- [ ] **Milestone 5**: Auth / Multi-User Accountant Login (shared ledger gate) — `in_progress` 2026-09-17 (`PLAN-auth-multi-user` + `TASK-2026-09-17-auth-multi-user` `in_progress` M5.1–M5.3); Later remainder → multi-currency, Stripe
 
 ### Active Milestone Task Breakdown
 Track tasks using atomic checklists (`[x]` Done, `[/]` In Progress, `[ ]` Queued, `[!]` Blocked):
@@ -45,9 +45,9 @@ Track tasks using atomic checklists (`[x]` Done, `[/]` In Progress, `[ ]` Queued
 - [x] M4.2 Print CSS + Print button (p1) — done 2026-09-17 (`PrintButton` + `@media print` + Receipt links)
 - [x] M4.3 Hardening + verify (p2) — done 2026-09-17 (44/44 green, tsc/lint clean, build 10/10)
 - [x] Manual acceptance M4 (owner: user): receipt `/invoices/[id]` + Print preview receipt-only — accepted 2026-09-17 (fresh :3000 smoke 200, invalid 404)
-- [/] TASK-2026-09-17-auth-multi-user M5.1 Schema + seed + domain (p0) — `in_progress` 2026-09-17 (User/Session + bcryptjs + opaque token, 53/53 green)
-- [ ] TASK-2026-09-17-auth-multi-user M5.2 Actions + middleware gate (p0) — queued 2026-09-17 (login/logout + 302 logic + /login)
-- [ ] TASK-2026-09-17-auth-multi-user M5.3 Wiring + regression (p1) — queued 2026-09-17 (requireSession on all protected actions, 44+ regression)
+- [x] TASK-2026-09-17-auth-multi-user M5.1 Schema + seed + domain (p0) — done 2026-09-17 (User/Session + bcryptjs @3.0.3 + opaque token, `cde43b5`, 53/53 green)
+- [x] TASK-2026-09-17-auth-multi-user M5.2 Actions + middleware gate (p0) — done 2026-09-17 (login/logout + middleware 307 + `/login` + `Proxy`, smoke 307/200)
+- [x] TASK-2026-09-17-auth-multi-user M5.3 Wiring + regression (p1) — done 2026-09-17 (requireSession on all actions 20 sites, 53/53 green, build `ƒ` all protected)
 - [ ] TASK-2026-09-17-auth-multi-user M5.4 Hardening + verify (p2) — queued 2026-09-17 (cookie audit + curl matrix + .env hygiene)
 
 ---
@@ -55,13 +55,13 @@ Track tasks using atomic checklists (`[x]` Done, `[/]` In Progress, `[ ]` Queued
 ## 3. Active Working Set
 - **Target Workspace / Package (if Monorepo)**: standalone (N/A)
 - **Active RFC / Spec**: `docs/specs/2026-09-17-spec-auth-multi-user.md` (`PLAN-auth-multi-user`, Full, `ready` 2026-09-17 — M5 accountant login, accountant pain)
-- **Active Task Spec**: `docs/tasks/TASK-2026-09-17-auth-multi-user.md` (`in_progress` M5.1; TDD `disabled`)
-- **Key Source Files in Flight**: `prisma/schema.prisma`, `src/lib/auth.ts`, `src/lib/session.ts`, `src/lib/auth.test.ts`, `prisma/seed.ts` (M5.1 landed)
+- **Active Task Spec**: `docs/tasks/TASK-2026-09-17-auth-multi-user.md` (`in_progress` M5.1–M5.3; TDD `disabled`)
+- **Key Source Files in Flight**: `src/actions/auth.ts`, `src/middleware.ts`, `src/app/login/**`, `src/actions/ledger.ts`, `src/actions/invoicing.ts`, `src/actions/imports.ts` (M5.2+M5.3 landed)
 - **Verification Commands (Scoped)**:
-  - Unit Tests: `bun test` (44 pass / 0 fail 2026-09-17; M5 will be 44+ new)
+  - Unit Tests: `bun test` (53 pass / 0 fail 2026-09-17)
   - Typecheck: `bunx tsc --noEmit` (green 2026-09-17)
   - Linter: `bun run lint` (green 2026-09-17)
-  - Build: `bun run build` (OK 2026-09-17, 10 routes incl. `ƒ /invoices/[id]`; M5 will be `ƒ /login`)
+  - Build: `bun run build` (OK 2026-09-17, 11 routes + `ƒ Proxy (Middleware)`, all protected `ƒ`)
 
 ---
 

@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { getTrialBalance } from "@/actions/ledger";
+import { getSession } from "@/lib/session";
+import { LogoutButton } from "@/components/LogoutButton";
 
 const NAV = [
   { href: "/accounts", title: "Chart of Accounts", blurb: "Assets, Liabilities, Equity, Revenue, Expenses" },
@@ -13,17 +15,24 @@ const NAV = [
 
 export default async function Home() {
   const tb = await getTrialBalance();
+  const session = await getSession();
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-4 py-10">
-      <header>
-        <h1 className="text-2xl font-semibold">LedgerCraft</h1>
-        <p className="mt-1 text-sm text-zinc-500">
-          Double-entry ledger. Every entry balances.{" "}
-          <span className="font-mono tabular-nums">
-            Dr {tb.totalDebitsDisplay} = Cr {tb.totalCreditsDisplay}{" "}
-            {tb.balanced ? "✓" : "✗"}
-          </span>
-        </p>
+      <header className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-semibold">LedgerCraft</h1>
+          <p className="mt-1 text-sm text-zinc-500">
+            Double-entry ledger. Every entry balances.{" "}
+            <span className="font-mono tabular-nums">
+              Dr {tb.totalDebitsDisplay} = Cr {tb.totalCreditsDisplay}{" "}
+              {tb.balanced ? "✓" : "✗"}
+            </span>
+          </p>
+          {session ? (
+            <p className="mt-1 text-xs text-zinc-500">Signed in as {session.user.email}</p>
+          ) : null}
+        </div>
+        {session ? <LogoutButton email={session.user.email} /> : null}
       </header>
       <nav className="grid gap-3 sm:grid-cols-2">
         {NAV.map((n) => (

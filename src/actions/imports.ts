@@ -16,6 +16,7 @@ import {
 } from "@/lib/csvImport";
 import { db } from "@/lib/db";
 import { formatCents } from "@/lib/money";
+import { requireSession } from "@/lib/session";
 import type { ActionResult } from "./ledger";
 
 function toError(e: unknown): string {
@@ -50,6 +51,7 @@ export async function uploadCsvAction(input: {
 }): Promise<
   ActionResult<{ batchId: string; fileHash: string; drafts: DraftView[] }>
 > {
+  await requireSession();
   try {
     const batch = await createBatch({
       filename: input.filename,
@@ -75,6 +77,7 @@ export async function postImportAction(input: {
   content: string;
   selections: { index: number; offsetAccountId: string; include: boolean }[];
 }): Promise<ActionResult<{ postedCount: number }>> {
+  await requireSession();
   try {
     const batch = await postDrafts(
       {
@@ -92,5 +95,6 @@ export async function postImportAction(input: {
 }
 
 export async function listBatches() {
+  await requireSession();
   return db.importBatch.findMany({ orderBy: { createdAt: "desc" } });
 }

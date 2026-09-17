@@ -12,6 +12,7 @@ import {
 } from "@/lib/ledger";
 import { db } from "@/lib/db";
 import { formatCents, parseDollarsToCents } from "@/lib/money";
+import { requireSession } from "@/lib/session";
 
 export interface ActionResult<T> {
   ok: boolean;
@@ -34,6 +35,7 @@ function toError(e: unknown): string {
 }
 
 export async function listAccounts() {
+  await requireSession();
   return db.account.findMany({ orderBy: { code: "asc" } });
 }
 
@@ -48,6 +50,7 @@ export async function createJournal(input: {
   description: string;
   lines: JournalFormLine[];
 }): Promise<ActionResult<{ entryId: string }>> {
+  await requireSession();
   try {
     const entry = await postJournal({
       date: new Date(input.date).toISOString(),
@@ -71,6 +74,7 @@ export async function reverseJournal(input: {
   entryId: string;
   reason: string;
 }): Promise<ActionResult<{ entryId: string }>> {
+  await requireSession();
   try {
     const reversal = await reverseEntry({
       entryId: input.entryId,
@@ -86,6 +90,7 @@ export async function reverseJournal(input: {
 }
 
 export async function getTrialBalance() {
+  await requireSession();
   const tb = await trialBalance();
   return {
     ...tb,
@@ -100,6 +105,7 @@ export async function getTrialBalance() {
 }
 
 export async function getProfitAndLoss() {
+  await requireSession();
   const pnl = await profitAndLoss();
   return {
     ...pnl,
@@ -110,6 +116,7 @@ export async function getProfitAndLoss() {
 }
 
 export async function listRecentEntries(limit = 20) {
+  await requireSession();
   return db.journalEntry.findMany({
     orderBy: { createdAt: "desc" },
     take: limit,
