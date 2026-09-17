@@ -38,14 +38,16 @@ bunx tsc --noEmit; bun run lint; bun run build # 13 routes incl. ƒ /api/stripe/
 
 ## Env
 
-`.env` holds the **hosted** libSQL URL + token (Vercel, and any by-hand remote op). Local runs are kept off it by two gitignored override files, because Next.js and Bun both load them *after* `.env` (and above `.env.local`, which `vercel env pull` rewrites):
+`.env` holds the **hosted** libSQL URL + token (Vercel, and any by-hand remote op). Local modes are kept off it by two committed, secret-free mode files, with a gitignored per-machine override layer on top. Next.js and Bun agree on the order (lowest → highest precedence): `.env` → `.env.<mode>` → `.env.local` → `.env.<mode>.local`:
 
-| File | Used by | Value |
-| :--- | :--- | :--- |
-| `.env.development.local` | `bun dev` | `DATABASE_URL="file:./ledger.db"` |
-| `.env.test.local` | `bun test` | `DATABASE_URL="file:./ledger.db"` |
+| File | Tracked? | Applies to | Value |
+| :--- | :--- | :--- | :--- |
+| `.env.development` | **yes** | `bun dev`, `next dev` | `DATABASE_URL="file:./ledger.db"` |
+| `.env.test` | **yes** | `bun test` | `DATABASE_URL="file:./ledger.db"` |
+| `.env.development.local` | no (gitignored) | `bun dev`, `next dev` | this machine's override |
+| `.env.test.local` | no (gitignored) | `bun test` | this machine's override |
 
-Delete either file to point that mode back at the hosted DB. Note an **exported** `DATABASE_URL` in your shell outranks every `.env*` file. `.env.example` has the full placeholder set:
+Because the two mode files are committed, **a fresh clone cannot point development or tests at the hosted ledger** — not even if `.env` holds a `libsql://` URL. To deliberately run a mode against the hosted database, put it in `.env.local` (or the mode-local file), or export `DATABASE_URL` in the shell; an exported variable outranks every `.env*` file. `.env.example` has the full placeholder set:
 
 ```
 DATABASE_URL="file:./ledger.db" # local default; hosted: libsql://<db>-<org>.turso.io + DATABASE_AUTH_TOKEN

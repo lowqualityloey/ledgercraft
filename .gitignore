@@ -33,6 +33,9 @@ yarn-error.log*
 # env files (can opt-in for committing if needed)
 .env*
 !.env.example
+# committed on purpose: these two keep dev/test off the hosted database in every clone
+!.env.development
+!.env.test
 
 # vercel
 .vercel
