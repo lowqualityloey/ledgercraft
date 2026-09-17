@@ -24,3 +24,31 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* M4: browser print → Save as PDF. Hide app chrome, force light ink. */
+@page {
+  margin: 16mm;
+}
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+
+  body {
+    background: #fff !important;
+    color: #000 !important;
+  }
+
+  .print-receipt {
+    border: none !important;
+    background: #fff !important;
+    color: #000 !important;
+    padding: 0 !important;
+  }
+
+  .print-receipt * {
+    color: #000 !important;
+    border-color: #ddd !important;
+  }
+}

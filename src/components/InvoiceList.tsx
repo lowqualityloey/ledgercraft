@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { payInvoiceAction, voidInvoiceAction } from "@/actions/invoicing";
 import { formatCents } from "@/lib/money";
@@ -85,7 +86,14 @@ export function InvoiceList({ invoices }: { invoices: InvoiceRow[] }) {
           </ul>
           <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
             <p className="font-mono text-sm tabular-nums">Total {inv.totalDisplay}</p>
-            <div className="flex gap-2">
+            <div className="no-print flex gap-2">
+              <Link
+                href={`/invoices/${inv.id}`}
+                aria-label={`Open receipt ${inv.number}`}
+                className="rounded border border-zinc-300 px-3 py-1 text-sm focus-visible:outline-2 focus-visible:outline-offset-2 dark:border-zinc-700"
+              >
+                Receipt
+              </Link>
               {inv.status === "UNPAID" && (
                 <button
                   type="button"

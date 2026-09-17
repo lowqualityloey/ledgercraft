@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { ZodError } from "zod";
+import { z, ZodError } from "zod";
 import {
   ConflictError,
   NotFoundError,
@@ -149,4 +149,30 @@ export async function listInvoices() {
     ...i,
     totalDisplay: formatCents(i.totalCents),
   }));
+}
+
+// M4: read-only receipt fetch. Validates id at the boundary; money
+// formatting stays in integer cents (INV-02). Returns null when missing
+// so the route can call notFound().
+export async function getInvoiceReceipt(id: string) {
+  const parsed = z.string().cuid().safeParse(id);
+  if (!parsed.success) return null;
+  const invoice = await db.invoice.findUnique({
+    where: { id: parsed.data },
+    include: {
+      client: { select: { name: true, email: true } },
+      lines: { orderBy: { description: "asc" } },
+    },
+  });
+  if (!invoice) return null;
+  return {
+    ...invoice,
+    totalDisplay: formatCents(invoice.totalCents),
+    subtotalDisplay: formatCents(invoice.subtotalCents),
+    lines: invoice.lines.map((l) => ({
+      ...l,
+      unitDisplay: formatCents(l.unitCents),
+      lineDisplay: formatCents(l.lineTotal),
+    })),
+  };
 }
