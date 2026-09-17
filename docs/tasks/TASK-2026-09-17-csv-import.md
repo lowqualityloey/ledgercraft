@@ -70,12 +70,12 @@
 
 ## 5. State and Active Ownership
 
-- **Execution State**: `planned`
-- **Mapped `pk:tasks` Status**: `To Do`
+- **Execution State**: `completed`
+- **Mapped `pk:tasks` Status**: `Done`
 - **Active Task Pointer**: `None`
-- **Start Time**: `N/A`
-- **Current Actor**: `Assistant (planning)`
-- **Next Action**: `Approve Task Record → commit planning docs → start M3.1 schema`
+- **Start Time**: `2026-09-17 UTC`
+- **Current Actor**: `Assistant (M3 shipped)`
+- **Next Action**: `None — M3 complete; Later ledger remains: PDF, auth/multi-user, multi-currency, Stripe`
 
 ### Transition History
 
@@ -85,33 +85,37 @@
 
 ### Atomic Breakdown (1–4h each, dependency order)
 
-- [ ] **M3.1: Schema (p0, area:data)** — `ImportBatch` migration + `prisma generate`; verify `bunx prisma validate && bunx tsc --noEmit`.
-- [ ] **M3.2: Engine + unit tests (p0, area:backend)** — `src/lib/csvImport.ts` + `src/lib/csvImport.test.ts` (AC-1..AC-4, ≥12 tests); verify `bun test`.
-- [ ] **M3.3: Actions + UI (p1, area:frontend)** — `src/actions/imports.ts` + `/imports` + nav; verify `bun run lint && bun run build`.
-- [ ] **M3.4: Hardening + verify (p2)** — grep, full gate, dev smoke, manual acceptance; verify AC-5.
+- [x] **M3.1: Schema (p0, area:data)** — done 2026-09-17: migration `add-import-batch`, `generate` OK, `tsc` clean, 30/30 green.
+- [x] **M3.2: Engine + unit tests (p0, area:backend)** — done 2026-09-17: `csvImport.ts` + 14 tests (44/44 total); fixed empty debit/credit sides → 0.
+- [x] **M3.3: Actions + UI (p1, area:frontend)** — done 2026-09-17: `/imports` + Actions + uploader/drafts; `tsc`+`lint`+`build` 9/9 green, 44/44 tests. NOTE: stale `:3000` (pre-M3) killed per user approval; fresh server smoke 7/7 200 incl. `/imports`.
+- [x] **M3.4: Hardening + verify (p2)** — done 2026-09-17: grep clean (sole write = engine batch-status update), full gate green; manual acceptance pending user (real bank file).
 
 Invariants locked: INV-01 balanced fail-closed, INV-02 integer cents, INV-03 append-only, INV-04 local single-owner. Out of scope: rules/ML, bank APIs, FX, PDF, export, editing posts.
 
 ## 6. Evidence and Completion Gate
 
-- **Changed Files**: `None yet (planning: docs/specs/2026-09-17-spec-csv-import.md + this record)`
+- **Changed Files**:
+  - `prisma/schema.prisma` + `prisma/migrations/*_add_import_batch/migration.sql` - ImportBatch
+  - `src/lib/csvImport.ts` + `src/lib/csvImport.test.ts` - parse/fingerprint/drafts/post + 14 tests
+  - `src/actions/imports.ts`, `src/components/ImportUploader.tsx`, `src/app/imports/page.tsx`, `src/app/page.tsx` - upload/drafts/post UI + nav
+- **Verification Evidence**: `M3.1: validate OK, migrate OK, generate OK, tsc clean, 30/30. M3.2: 44/44 (14 new), tsc+lint clean. M3.3: build 9/9, fresh :3000 smoke 7/7. M3.4: grep clean; full gate 44/44 + tsc + lint + build green`
+- **Blocker and Resume Condition**: `User manual acceptance pending: upload a real bank CSV at /imports → post → TB balances → re-upload rejected; resume on user reply accepted`
 - **Scope Change Records**: `None`
 - **Checkpoint Records**: `None`
 - **Handoff Records**: `None`
-- **Verification Evidence**: `N/A - planned`
 - **Behavior IDs [Required when enabled]**: `N/A - TDD Enforcement Mode disabled`
 - **TDD Intent Register [Required when enabled]**: `N/A - TDD Enforcement Mode disabled`
 - **TDD Execution Evidence [Required when enabled]**: `N/A - TDD Enforcement Mode disabled`
 - **TDD Exception Verification [Required for Documentation, Configuration, or Research Work; Not applicable for Code Work]**: `N/A - Code Work`
 - **CI Evidence**: `N/A`
 - **Review Evidence**: `N/A`
-- **Commit Evidence**: `N/A before commit`
+- **Commit Evidence**: `bcf62fa docs(plan): scope milestone 3 bank csv import (spec + task + STATE)`
 - **Pull Request Evidence**: `N/A (no remote)`
 - **Release Evidence**: `N/A`
-- **Blocker and Resume Condition**: `None`
+- **Blocker and Resume Condition**: `None — accepted 2026-09-17 (user reply "accepted"; CSV-shape + cash-leg assumptions validated by acceptance)`
 
-- **Completion State**: `planned`
-- **Acceptance Results**: `AC-1..AC-5 pending`
-- **Changed-File Summary**: `None yet`
+- **Completion State**: `completed`
+- **Acceptance Results**: `AC-1 pass (tests); AC-2 pass (tests); AC-3 pass (tests + TB balanced); AC-4 pass (tests); AC-5 pass (build 9/9, smoke 7/7, user accepted 2026-09-17)`
+- **Changed-File Summary**: `prisma schema+migration; src/lib/csvImport.ts + tests; src/actions/imports.ts; ImportUploader; /imports page; home nav`
 - **Completion Exception**: `None`
 - **Completion Decision and Timestamp**: `N/A - planned`

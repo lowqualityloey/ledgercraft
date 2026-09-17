@@ -105,3 +105,22 @@ model InvoiceLine {
 
   @@index([invoiceId])
 }
+
+// Milestone 3 — Bank CSV import (drafts unpersisted; batch tracks counts only).
+
+enum ImportStatus {
+  DRAFT
+  POSTED
+  FAILED
+}
+
+model ImportBatch {
+  id             String       @id @default(cuid())
+  filename       String
+  fileHash       String       @unique // sha256 of raw bytes
+  rowCount       Int
+  status         ImportStatus @default(DRAFT)
+  postedCount    Int          @default(0)
+  idempotencyKey String       @unique
+  createdAt      DateTime     @default(now())
+}

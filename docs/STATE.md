@@ -16,7 +16,7 @@
 - [x] **Milestone 0**: Phase 0 Intake Baseline — MVP floor + Later ledger + invariants locked (2026-09-17)
 - [x] **Milestone 1**: Core Ledger Engine (CoA + balanced journal + TB/P&L) — completed 2026-09-17 (`9a4f250` product, `6dc9529` docs)
 - [x] **Milestone 2**: Clients + Invoicing (accrual, full-pay) — shipped 2026-09-17 (T1–T4 + user acceptance, `1e3361f`)
-- [ ] **Milestone 3**: Bank CSV Import (drafts + balanced post + dedup) — planned 2026-09-17 (`PLAN-csv-import` + `TASK-2026-09-17-csv-import`)
+- [ ] **Milestone 3**: Bank CSV Import (drafts + balanced post + dedup) — shipped 2026-09-17 (M3.1–M3.4 + user acceptance)
 
 ### Active Milestone Task Breakdown
 Track tasks using atomic checklists (`[x]` Done, `[/]` In Progress, `[ ]` Queued, `[!]` Blocked):
@@ -33,8 +33,11 @@ Track tasks using atomic checklists (`[x]` Done, `[/]` In Progress, `[ ]` Queued
 - [x] TASK-2026-09-17-invoicing T3: Actions + UI (p1) — done 2026-09-17 (build 8/8, smoke 5/5)
 - [x] TASK-2026-09-17-invoicing T4: Reports wiring + hardening (p2) — done 2026-09-17 (grep clean, full gate green)
 - [x] Manual acceptance M2 (owner: user): client → invoice → paid, TB balances — accepted 2026-09-17 (totals not reported)
-- [ ] TASK-2026-09-17-csv-import M3.1: Schema (p0) — planned
-- [ ] TASK-2026-09-17-csv-import M3.2: Engine + unit tests (p0) — planned
+- [x] TASK-2026-09-17-csv-import M3.1: Schema (p0) — done 2026-09-17 (migration applied, tsc+30 tests green)
+- [x] TASK-2026-09-17-csv-import M3.2: Engine + unit tests (p0) — done 2026-09-17 (14 new, 44/44 green)
+- [x] TASK-2026-09-17-csv-import M3.3: Actions + UI (p1) — done 2026-09-17 (build 9/9, fresh :3000 smoke 7/7)
+- [x] TASK-2026-09-17-csv-import M3.4: Hardening + verify (p2) — done 2026-09-17 (grep clean, full gate green)
+- [x] Manual acceptance M3 (owner: user): real bank CSV → post → TB balances → re-upload rejected — accepted 2026-09-17
 - [ ] TASK-2026-09-17-csv-import M3.3: Actions + UI (p1) — planned
 - [ ] TASK-2026-09-17-csv-import M3.4: Hardening + verify (p2) — planned
 - [ ] TASK-2026-09-17-invoicing T3: Actions + UI (p1) — planned

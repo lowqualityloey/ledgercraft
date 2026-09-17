@@ -6,6 +6,7 @@ const NAV = [
   { href: "/journal", title: "Journal", blurb: "Post balanced entries; correct via reversals" },
   { href: "/clients", title: "Clients", blurb: "Who owes you; track unpaid balances" },
   { href: "/invoices", title: "Invoices", blurb: "Bill clients; auto-posts AR and revenue" },
+  { href: "/imports", title: "Bank CSV Import", blurb: "Upload bank activity; post balanced drafts" },
   { href: "/trial-balance", title: "Trial Balance", blurb: "Debits must equal credits" },
   { href: "/profit-loss", title: "Profit & Loss", blurb: "Revenue minus expenses" },
 ];
