@@ -1,0 +1,55 @@
+// LedgerCraft Milestone 1 — Core Ledger schema (draft, pending migration approval)
+// Invariants: INV-01 balanced entries, INV-02 integer cents, INV-03 append-only (Restrict)
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+enum AccountType {
+  ASSET
+  LIABILITY
+  EQUITY
+  REVENUE
+  EXPENSE
+}
+
+model Account {
+  id        String      @id @default(cuid())
+  code      String      @unique // e.g. 1000 Cash/Bank, 4000 Client Income
+  name      String
+  type      AccountType
+  lines     JournalLine[]
+  createdAt DateTime    @default(now())
+}
+
+model JournalEntry {
+  id             String        @id @default(cuid())
+  date           DateTime
+  description    String
+  idempotencyKey String        @unique
+  reversesId     String?       @unique // one reversal per entry
+  reverses       JournalEntry? @relation("Reversal", fields: [reversesId], references: [id])
+  reversedBy     JournalEntry? @relation("Reversal")
+  lines          JournalLine[]
+  createdAt      DateTime      @default(now())
+
+  @@index([date])
+}
+
+model JournalLine {
+  id        String       @id @default(cuid())
+  entryId   String
+  entry     JournalEntry @relation(fields: [entryId], references: [id], onDelete: Restrict)
+  accountId String
+  account   Account      @relation(fields: [accountId], references: [id], onDelete: Restrict)
+  debit     Int // integer minor units (cents), >= 0
+  credit    Int // integer minor units (cents), >= 0
+
+  @@index([accountId])
+  @@index([entryId])
+}
