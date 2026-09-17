@@ -112,7 +112,7 @@ Invariants locked: INV-01 balanced fail-closed, INV-02 integer cents, INV-03 app
 - **TDD Exception Verification [Required for Documentation, Configuration, or Research Work; Not applicable for Code Work]**: `N/A - Code Work`
 - **CI Evidence**: `N/A`
 - **Review Evidence**: `N/A`
-- **Commit Evidence**: `b2f9e1f docs(plan): scope milestone 2 clients invoicing (spec + task + STATE)`
+- **Commit Evidence**: `b2f9e1f docs(plan): scope milestone 2 clients invoicing (spec + task + STATE); 1e3361f feat(invoicing): add clients and accrual invoicing with auto-posting (T1–T4)`
 - **Pull Request Evidence**: `N/A (no remote)`
 - **Release Evidence**: `N/A`
 - **Blocker and Resume Condition**: `None — accepted 2026-09-17 (user reply "accepted + dr/cr totals"; numeric totals not reported, balance proven by 30/30 tests + TB assertions)`

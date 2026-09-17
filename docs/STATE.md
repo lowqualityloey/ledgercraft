@@ -2,7 +2,7 @@
 
 ## 1. Executive Summary & Current Position
 - **Project Name**: LedgerCraft
-- **Current Milestone / Epic**: Milestone 2 planned (Clients + Invoicing) — `PLAN-invoicing` draft + Task Record ready
+- **Current Milestone / Epic**: Milestone 3 planned (Bank CSV Import) — `PLAN-csv-import` draft + Task Record ready
 - **Overall Status**: ACTIVE <!-- Options: ACTIVE | PAUSED | STABILIZING | RELEASE_CANDIDATE | COMPLETED (all milestones closed, release evidence archived, zero open blockers — recording stops here) -->
 - **Target Release / Deadline**: none (local-only)
 - **Current Working Branch**: main
@@ -15,7 +15,8 @@
 ### Milestone Roadmap
 - [x] **Milestone 0**: Phase 0 Intake Baseline — MVP floor + Later ledger + invariants locked (2026-09-17)
 - [x] **Milestone 1**: Core Ledger Engine (CoA + balanced journal + TB/P&L) — completed 2026-09-17 (`9a4f250` product, `6dc9529` docs)
-- [ ] **Milestone 2**: Clients + Invoicing (accrual, full-pay) — shipped 2026-09-17 (T1–T4 + user acceptance)
+- [x] **Milestone 2**: Clients + Invoicing (accrual, full-pay) — shipped 2026-09-17 (T1–T4 + user acceptance, `1e3361f`)
+- [ ] **Milestone 3**: Bank CSV Import (drafts + balanced post + dedup) — planned 2026-09-17 (`PLAN-csv-import` + `TASK-2026-09-17-csv-import`)
 
 ### Active Milestone Task Breakdown
 Track tasks using atomic checklists (`[x]` Done, `[/]` In Progress, `[ ]` Queued, `[!]` Blocked):
@@ -31,7 +32,11 @@ Track tasks using atomic checklists (`[x]` Done, `[/]` In Progress, `[ ]` Queued
 - [x] TASK-2026-09-17-invoicing T2: Engine + unit tests (p0) — done 2026-09-17 (13 new, 30/30 green)
 - [x] TASK-2026-09-17-invoicing T3: Actions + UI (p1) — done 2026-09-17 (build 8/8, smoke 5/5)
 - [x] TASK-2026-09-17-invoicing T4: Reports wiring + hardening (p2) — done 2026-09-17 (grep clean, full gate green)
-- [x] Manual acceptance (owner: user): client → invoice → paid, Trial Balance balances — accepted 2026-09-17 (numeric totals not reported)
+- [x] Manual acceptance M2 (owner: user): client → invoice → paid, TB balances — accepted 2026-09-17 (totals not reported)
+- [ ] TASK-2026-09-17-csv-import M3.1: Schema (p0) — planned
+- [ ] TASK-2026-09-17-csv-import M3.2: Engine + unit tests (p0) — planned
+- [ ] TASK-2026-09-17-csv-import M3.3: Actions + UI (p1) — planned
+- [ ] TASK-2026-09-17-csv-import M3.4: Hardening + verify (p2) — planned
 - [ ] TASK-2026-09-17-invoicing T3: Actions + UI (p1) — planned
 - [ ] TASK-2026-09-17-invoicing T4: Reports wiring + hardening (p2) — planned
 - [x] Manual acceptance (owner: user): expense + client payment posted, Trial Balance balances — accepted 2026-09-17
@@ -40,8 +45,8 @@ Track tasks using atomic checklists (`[x]` Done, `[/]` In Progress, `[ ]` Queued
 
 ## 3. Active Working Set
 - **Target Workspace / Package (if Monorepo)**: standalone (N/A)
-- **Active RFC / Spec**: `docs/specs/2026-09-17-spec-invoicing.md` (PLAN-invoicing draft)
-- **Active Task Spec**: `docs/tasks/TASK-2026-09-17-invoicing.md` (planned, TDD disabled)
+- **Active RFC / Spec**: `docs/specs/2026-09-17-spec-csv-import.md` (PLAN-csv-import draft)
+- **Active Task Spec**: `docs/tasks/TASK-2026-09-17-csv-import.md` (planned, TDD disabled)
 - **Key Source Files in Flight**: none (all landed at `6dc9529`)
 - **Verification Commands (Scoped)**:
   - Unit Tests: `bun test` (17 pass / 0 fail 2026-09-17)
