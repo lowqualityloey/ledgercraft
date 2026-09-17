@@ -36,6 +36,8 @@ model JournalEntry {
   reverses       JournalEntry? @relation("Reversal", fields: [reversesId], references: [id])
   reversedBy     JournalEntry? @relation("Reversal")
   lines          JournalLine[]
+  invoiceIssue   Invoice?      @relation("InvoiceIssue")
+  invoicePay     Invoice?      @relation("InvoicePay")
   createdAt      DateTime      @default(now())
 
   @@index([date])
@@ -52,4 +54,54 @@ model JournalLine {
 
   @@index([accountId])
   @@index([entryId])
+}
+
+// Milestone 2 — Clients + Invoicing (accrual, full-pay).
+// Additive tables; M1 journal models untouched except back-relations above.
+
+model Client {
+  id        String    @id @default(cuid())
+  name      String
+  email     String    @unique
+  notes     String?
+  invoices  Invoice[]
+  createdAt DateTime  @default(now())
+}
+
+enum InvoiceStatus {
+  DRAFT
+  UNPAID
+  PAID
+  VOID
+}
+
+model Invoice {
+  id             String        @id @default(cuid())
+  clientId       String
+  client         Client        @relation(fields: [clientId], references: [id], onDelete: Restrict)
+  number         String        @unique // app-sequenced, e.g. INV-0001
+  status         InvoiceStatus @default(DRAFT)
+  subtotalCents  Int
+  totalCents     Int
+  issueEntryId   String?       @unique
+  issueEntry     JournalEntry? @relation("InvoiceIssue", fields: [issueEntryId], references: [id])
+  paymentEntryId String?       @unique
+  paymentEntry   JournalEntry? @relation("InvoicePay", fields: [paymentEntryId], references: [id])
+  idempotencyKey String        @unique
+  lines          InvoiceLine[]
+  createdAt      DateTime      @default(now())
+
+  @@index([clientId, status])
+}
+
+model InvoiceLine {
+  id          String  @id @default(cuid())
+  invoiceId   String
+  invoice     Invoice @relation(fields: [invoiceId], references: [id], onDelete: Restrict)
+  description String
+  quantity    Int
+  unitCents   Int
+  lineTotal   Int // quantity * unitCents, integer minor units
+
+  @@index([invoiceId])
 }

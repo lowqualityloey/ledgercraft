@@ -4,6 +4,8 @@ import { getTrialBalance } from "@/actions/ledger";
 const NAV = [
   { href: "/accounts", title: "Chart of Accounts", blurb: "Assets, Liabilities, Equity, Revenue, Expenses" },
   { href: "/journal", title: "Journal", blurb: "Post balanced entries; correct via reversals" },
+  { href: "/clients", title: "Clients", blurb: "Who owes you; track unpaid balances" },
+  { href: "/invoices", title: "Invoices", blurb: "Bill clients; auto-posts AR and revenue" },
   { href: "/trial-balance", title: "Trial Balance", blurb: "Debits must equal credits" },
   { href: "/profit-loss", title: "Profit & Loss", blurb: "Revenue minus expenses" },
 ];

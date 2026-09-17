@@ -70,12 +70,12 @@
 
 ## 5. State and Active Ownership
 
-- **Execution State**: `planned`
-- **Mapped `pk:tasks` Status**: `To Do`
+- **Execution State**: `completed`
+- **Mapped `pk:tasks` Status**: `Done`
 - **Active Task Pointer**: `None`
-- **Start Time**: `N/A`
-- **Current Actor**: `Assistant (planning)`
-- **Next Action**: `Approve Task Record → start T1 schema`
+- **Start Time**: `2026-09-17 UTC`
+- **Current Actor**: `Assistant (M2 shipped)`
+- **Next Action**: `None — M2 complete; Later ledger remains: PDF, CSV, auth, multi-currency, Stripe`
 
 ### Transition History
 
@@ -85,33 +85,40 @@
 
 ### Atomic Breakdown (1–4h each, dependency order)
 
-- [ ] **T1: Schema + seed refs (p0, area:data)** — migration `Client/Invoice/InvoiceLine`, resolve 1000/1200/4000 by code; verify `bunx prisma generate && bunx tsc --noEmit`.
-- [ ] **T2: Engine + unit tests (p0, area:backend)** — `src/lib/invoicing.ts` + `tests/invoicing.test.ts` (AC-1..AC-4, ≥10 tests); verify `bun test`.
-- [ ] **T3: Actions + UI (p1, area:frontend)** — `/clients`, `/invoices` + Actions, mono tables, status badges, WCAG AA; verify `bun run lint && bun run build`.
-- [ ] **T4: Reports wiring + hardening + verify (p2)** — TB/P&L smoke, dev 5/5, full gate `bun test && tsc && lint && build`; verify AC-5.
+- [x] **T1: Schema + seed refs (p0, area:data)** — done 2026-09-17: migration `add-clients-invoicing`, `prisma generate`, `tsc` clean, 17/17 green.
+- [x] **T2: Engine + unit tests (p0, area:backend)** — done 2026-09-17: `src/lib/invoicing.ts` + 13 tests green (30/30 total).
+- [x] **T3: Actions + UI (p1, area:frontend)** — done 2026-09-17: `/clients` + `/invoices` + Actions, mono tables, status badges; `tsc`+`lint`+`build` green, smoke 5/5 200.
+- [x] **T4: Reports wiring + hardening + verify (p2)** — done 2026-09-17: grep clean (fixed 1 float display), full gate green; manual acceptance pending user.
 
 Invariants locked: INV-01 balanced fail-closed, INV-02 integer cents, INV-03 append-only+reversals, INV-04 local single-owner. Out of scope: PDF/CSV/auth/multi-currency/Stripe/partials.
 
 ## 6. Evidence and Completion Gate
 
-- **Changed Files**: `None yet`
+- **Changed Files**:
+  - `prisma/schema.prisma` - Client/Invoice/InvoiceLine + JournalEntry back-relations
+  - `prisma/migrations/20260917065632_add_clients_invoicing/migration.sql` - additive migration
+  - `src/lib/invoicing.ts` - createClient/postInvoice/markPaid/voidInvoice (code-resolved 1000/1200/4000, short-key idempotency)
+  - `src/lib/invoicing.test.ts` - 13 tests (AC-1..AC-4 + accrual)
+  - `src/actions/invoicing.ts` - list/create clients+invoices, pay/void (dollar parse at boundary, UUID idempotency)
+  - `src/components/ClientForm.tsx`, `InvoiceForm.tsx`, `InvoiceList.tsx` - forms + status badges + pay/void
+  - `src/app/clients/page.tsx`, `src/app/invoices/page.tsx`, `src/app/page.tsx` - pages + nav
+- **Verification Evidence**: `T1: prisma validate OK; migrate OK; generate OK; tsc clean; bun test 17/0. T2 2026-09-17: bun test 30/30 (13 new); tsc clean; eslint clean. T3: build 8/8 routes; dev smoke 5/5 200. T4 2026-09-17: grep clean (fixed float /100 display → formatCents in InvoiceList); full gate 30/30 + tsc + lint + build green`
 - **Scope Change Records**: `None`
 - **Checkpoint Records**: `None`
 - **Handoff Records**: `None`
-- **Verification Evidence**: `N/A - planned`
 - **Behavior IDs [Required when enabled]**: `N/A - TDD Enforcement Mode disabled`
 - **TDD Intent Register [Required when enabled]**: `N/A - TDD Enforcement Mode disabled`
 - **TDD Execution Evidence [Required when enabled]**: `N/A - TDD Enforcement Mode disabled`
 - **TDD Exception Verification [Required for Documentation, Configuration, or Research Work; Not applicable for Code Work]**: `N/A - Code Work`
 - **CI Evidence**: `N/A`
 - **Review Evidence**: `N/A`
-- **Commit Evidence**: `N/A before commit`
+- **Commit Evidence**: `b2f9e1f docs(plan): scope milestone 2 clients invoicing (spec + task + STATE)`
 - **Pull Request Evidence**: `N/A (no remote)`
 - **Release Evidence**: `N/A`
-- **Blocker and Resume Condition**: `None`
+- **Blocker and Resume Condition**: `None — accepted 2026-09-17 (user reply "accepted + dr/cr totals"; numeric totals not reported, balance proven by 30/30 tests + TB assertions)`
 
-- **Completion State**: `planned`
-- **Acceptance Results**: `AC-1..AC-5 pending`
-- **Changed-File Summary**: `None yet`
+- **Completion State**: `completed`
+- **Acceptance Results**: `AC-1 pass (tests); AC-2 pass (tests + TB balanced); AC-3 pass (tests); AC-4 pass (tests); AC-5 pass (build 8/8, smoke 5/5, user accepted 2026-09-17)`
+- **Changed-File Summary**: `prisma schema+migration; src/lib/invoicing.ts + tests; src/actions/invoicing.ts; ClientForm/InvoiceForm/InvoiceList; /clients + /invoices pages; home nav`
 - **Completion Exception**: `None`
 - **Completion Decision and Timestamp**: `N/A - planned`
