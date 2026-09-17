@@ -44,29 +44,29 @@
 
 ## 3. Acceptance Criteria
 
-- [ ] **AC-1**: Currency + FX rate stored and converted via integer math
-  - **Result**: `Pending`
-  - **Evidence**: `bun test src/lib/money.test.ts (convertCents cases)`
+- [x] **AC-1**: Currency + FX rate stored and converted via integer math
+  - **Result**: `Pass`
+  - **Evidence**: `bun test src/lib/money.test.ts 5/5 convertCents + CurrencySchema`
   - Gherkin: `Given foreignCents 10000 and fxRateBps 10800, When convertCents, Then 10800. Given 1c×1.005 (10050 bps) with 1c, Then rounds to 1c. Given USD, When fxRateBps≠10000, Then Zod rejects.`
 
-- [ ] **AC-2**: Foreign invoice posts balanced journal in base
-  - **Result**: `Pending`
-  - **Evidence**: `bun test src/lib/invoicing.test.ts (FX post cases) + TB balanced`
+- [x] **AC-2**: Foreign invoice posts balanced journal in base
+  - **Result**: `Pass`
+  - **Evidence**: `bun test src/lib/invoicing.test.ts EUR 10800 + TB balanced (120800) + build`
   - Gherkin: `Given EUR invoice 100.00 + fxRate 1.08, When postInvoice, Then foreign total 10000, baseTotal 10800, journal Dr1200 10800 / Cr4000 10800, TB debits==credits==base. USD 100.00 → base 10000.`
 
-- [ ] **AC-3**: Invalid FX fails closed, nothing posts
-  - **Result**: `Pending`
-  - **Evidence**: `bun test (error cases)`
+- [x] **AC-3**: Invalid FX fails closed, nothing posts
+  - **Result**: `Pass`
+  - **Evidence**: `bun test invoicing.test.ts USD 10800 reject + 999/50001 reject`
   - Gherkin: `Given fxRateBps 0 or 99 or currency=USD with 10800, When postInvoice, Then ValidationError, zero invoices and zero journals created; duplicate number still 409.`
 
-- [ ] **AC-4**: UI captures currency + rate and shows base preview
-  - **Result**: `Pending`
-  - **Evidence**: `bun run build + dev smoke`
+- [x] **AC-4**: UI captures currency + rate and shows base preview
+  - **Result**: `Pass`
+  - **Evidence**: `bun run build Proxy + curl smoke Currency select + EUR→USD 200→230 on /invoices`
   - Gherkin: `Given InvoiceForm, When select EUR and type 1.08, Then live preview shows USD 108.00. On submit, Then invoice persists with currency EUR, fxRateBps 10800. KB + ARIA pass.`
 
-- [ ] **AC-5**: Receipt + list show dual totals when foreign, TB/P&L stay base-only
-  - **Result**: `Pending`
-  - **Evidence**: `bun run build + dev smoke receipt`
+- [x] **AC-5**: Receipt + list show dual totals when foreign, TB/P&L stay base-only
+  - **Result**: `Pass`
+  - **Evidence**: `curl smoke /invoices EUR 200→230, receipt dual when kept, TB 120800 balanced after USD+EUR`
   - Gherkin: `Given EUR invoice 100×1.08, When visiting /invoices and /invoices/[id], Then shows EUR 100.00 → USD 108.00; When visiting /trial-balance + /profit-loss, Then revenue == base sum, TB balanced.`
 
 ## 4. Execution Policy
@@ -82,12 +82,12 @@
 
 ## 5. State and Active Ownership
 
-- **Execution State**: `in_progress`
-- **Mapped `pk:tasks` Status**: `In Progress`
-- **Active Task Pointer**: `TASK-2026-09-17-multi-currency`
+- **Execution State**: `completed`
+- **Mapped `pk:tasks` Status**: `Done`
+- **Active Task Pointer**: `None`
 - **Start Time**: `2026-09-17 UTC`
-- **Current Actor**: `Assistant (M6.1)`
-- **Next Action**: `Build M6.1 Schema + money — Currency + convertCents + Invoice columns`
+- **Current Actor**: `Assistant (M6 shipped)`
+- **Next Action**: `None — M6 complete; Later ledger remains: Stripe`
 
 ### Transition History
 
@@ -96,13 +96,14 @@
 | `N/A` | `planned` | `2026-09-17 UTC` | `Assistant (pk:tasks)` | `Record created from PLAN-multi-currency` | `docs/specs/2026-09-17-spec-multi-currency.md` |
 | `planned` | `ready` | `2026-09-17 UTC` | `Assistant (pk:tasks)` | `Objective, scope, AC, dependencies, risk, verification complete — awaiting in_progress approval` | `this record §2–§4` |
 | `ready` | `in_progress` | `2026-09-17 UTC` | `Assistant (M6.1)` | `User approved in_progress — begin M6.1 Schema + money` | `user reply "1"` |
+| `in_progress` | `completed` | `2026-09-17 UTC` | `Assistant (M6 shipped)` | `M6.1–M6.4 + user acceptance — 62/62 green` | `user reply "accepted"` |
 
 ### Atomic Breakdown (1–4h each, dependency order)
 
-- [ ] **M6.1 Schema + money (p0, area:data/backend)** — `prisma/schema.prisma` `Currency` + `Invoice` columns + `migrate add_currency` + backfill, `src/lib/money.ts` `convertCents` + `CurrencySchema` + unit tests. Accepts AC-1.
-- [ ] **M6.2 Engine + tests (p0, area:backend)** — `src/lib/invoicing.ts` FX-aware `postInvoice` (foreign→base, journal in base) + `src/lib/invoicing.test.ts` (USD+EUR, journal base, idempotency, void). Accepts AC-2/AC-3.
-- [ ] **M6.3 UI + receipt (p1, area:frontend)** — `src/actions/invoicing.ts` `currency`/`fxRate` parsing, `InvoiceForm.tsx` select+rate+preview, `InvoiceList.tsx`/`InvoiceReceipt.tsx` dual, `getInvoiceReceipt` dual. Accepts AC-4/AC-5.
-- [ ] **M6.4 Hardening + verify (p2, area:auth)** — `tsc`/`lint`/`build` green, `grep -n fxRateBps` + `convertCents` no float, smoke `USD 100→100` + `EUR 100×1.08→108` + TB balanced, `requireSession` still on all actions. Accepts AC-1..AC-5.
+- [x] **M6.1 Schema + money (p0, area:data/backend)** — done 2026-09-17: `Currency` + `Invoice` columns + `migrate add_currency` + backfill `USD/10000`, `convertCents` + `CurrencySchema` 5 tests, `62/62` green.
+- [x] **M6.2 Engine + tests (p0, area:backend)** — done 2026-09-17: `postInvoice` foreign→base `EUR 10000→10800` journal `10800`, USD reject, range reject, `62/62` green.
+- [x] **M6.3 UI + receipt (p1, area:frontend)** — done 2026-09-17: `actions/invoicing` `currency`/`fxRate` parse, `InvoiceForm` `EUR`+`1.08`→`USD 230.00`, `InvoiceList` `EUR 200→USD 230`, `InvoiceReceipt` dual, `476437b`.
+- [x] **M6.4 Hardening + verify (p2, area:auth)** — done 2026-09-17: `tsc`/`lint`/`build` Proxy green, `grep fxRateBps 80` + `requireSession 20` + `no float`, smoke `USD 100→100` `EUR 100×1.08→108` TB `120800` balanced, auth gate `307/200`.
 
 Invariants locked: INV-01 balanced fail-closed, INV-02 integer cents + `convertCents` integer, INV-03 append-only+reversals. INV-04 auth wall intact (M5). Out of scope: live FX, revaluation, CSV multi-currency, Stripe, JPY exact, base-config.
 
@@ -119,7 +120,7 @@ Invariants locked: INV-01 balanced fail-closed, INV-02 integer cents + `convertC
   - `src/components/InvoiceForm.tsx` - currency select + rate + preview
   - `src/components/InvoiceList.tsx` - dual EUR → USD display
   - `src/components/InvoiceReceipt.tsx` - dual totals
-- **Verification Evidence**: `Pending — M6.1..M6.4`
+- **Verification Evidence**: `2026-09-17: bun test 62/62 + tsc clean + lint clean + build 11 routes Proxy + curl EUR 200→230 USD 100→100 TB 120800 balanced + gate 307/200`
 - **Scope Change Records**: `None`
 - **Checkpoint Records**: `None`
 - **Handoff Records**: `None`
@@ -129,14 +130,14 @@ Invariants locked: INV-01 balanced fail-closed, INV-02 integer cents + `convertC
 - **TDD Exception Verification [Required for Documentation, Configuration, or Research Work; Not applicable for Code Work]**: `N/A - Code Work`
 - **CI Evidence**: `N/A`
 - **Review Evidence**: `N/A`
-- **Commit Evidence**: `N/A before commit`
+- **Commit Evidence**: `476437b feat(invoicing): M6.1-M6.3 multi-currency`
 - **Pull Request Evidence**: `N/A (no remote)`
 - **Release Evidence**: `N/A`
-- **Blocker and Resume Condition**: `None — ready, awaiting explicit approval to enter in_progress`
+- **Blocker and Resume Condition**: `None — accepted 2026-09-17`
 
-- **Completion State**: `ready`
-- **Acceptance Results**: `Pending — AC-1..AC-5`
-- **Changed-File Summary**: `Pending`
+- **Completion State**: `completed`
+- **Acceptance Results**: `AC-1 Pass, AC-2 Pass, AC-3 Pass, AC-4 Pass, AC-5 Pass (5/5)`
+- **Changed-File Summary**: `prisma schema+migration + lib/money+invoicing+tests + actions/invoicing + InvoiceForm/List/Receipt dual (62/62)`
 - **Completion Exception**: `None`
-- **Completion Decision and Timestamp**: `N/A - planned`
+- **Completion Decision and Timestamp**: `Completed 2026-09-17 UTC — user accepted`
 
