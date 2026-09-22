@@ -2,7 +2,7 @@
 
 Rock-solid double-entry bookkeeping for freelancers — local-first, auth-gated, multi-currency, Stripe Checkout.
 
-`M1–M7` shipped, now on a hosted ledger — `75/75` `bun test`, `tsc`/`lint`/`build` `13` routes `ƒ /api/stripe/webhook` + `Proxy`. Local dev/test stay on `file:./ledger.db`; Production/Preview use hosted libSQL (Turso) so writes survive cold starts.
+`M1–M7` shipped, now on a hosted ledger — `82/82` `bun test`, `tsc`/`lint`/`build` `13` routes `ƒ /api/stripe/webhook` + `Proxy`. Local dev/test stay on `file:./ledger.db`; Production/Preview use hosted libSQL (Turso) so writes survive cold starts.
 
 ## Features
 
@@ -30,8 +30,8 @@ bunx prisma generate
 DATABASE_URL="file:./ledger.db" bunx prisma migrate deploy # creates ledger.db on a fresh clone (the file is no longer committed)
 bun prisma/seed.ts # CoA 15 + owner@ledgercraft.local / owner-pass-123 + accountant@ledgercraft.local / acct-pass-12345
 bun dev --port 3000 # http://localhost:3000/login
-bun test # 75 pass
-bunx tsc --noEmit; bun run lint; bun run build # 13 routes incl. ƒ /api/stripe/webhook + Proxy
+bun test # 82 pass
+bun run typecheck; bun run lint; bun run build # 13 routes incl. ƒ /api/stripe/webhook + Proxy
 ```
 
 `ledger.db` is the local dev/test database: gitignored and **no longer tracked** (it was force-committed only for the retired `/tmp` deploy copy), so it stays out of `git status`. The `migrate deploy` line above is what builds it — the explicit `file:` `DATABASE_URL` matters because the Prisma CLI cannot read `libsql://` and `prisma7.config.ts` loads only `.env`. Hosted environments use a remote libSQL URL instead.
@@ -59,11 +59,11 @@ NEXT_PUBLIC_BASE_URL="http://localhost:3000" # hosted: https://ledgercraft-ivory
 
 ## Hosted (Vercel)
 
-`https://ledgercraft-ivory.vercel.app` `● Ready` `55er…` (`6f89f42`).
+`https://ledgercraft-ivory.vercel.app` `● Ready` — Production. The project **is git-connected**: every push to `main` builds and aliases automatically (~30s), so shipping a fix is just `git push origin main`.
 
 ```bash
 vercel login
-vercel --prod # this project is NOT git-connected: deploys only happen via the CLI
+vercel --prod # manual fallback; the normal path is `git push origin main`
 # Vercel Dashboard → Settings → Environment Variables (Production + Preview)
 # DATABASE_URL=libsql://<db>-<org>.turso.io, DATABASE_AUTH_TOKEN, NEXT_PUBLIC_BASE_URL=https://ledgercraft-ivory.vercel.app, STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET
 ```
@@ -73,6 +73,19 @@ Hosted schema: Prisma's CLI cannot talk to `libsql://` (`P1013`), so migrations 
 Stripe Dashboard `Add endpoint` `https://ledgercraft-ivory.vercel.app/api/stripe/webhook` → `checkout.session.completed` → `whsec_…`. For local: `stripe listen --forward-to localhost:3000/api/stripe/webhook` (prints `whsec_…`).
 
 `src/lib/stripe.ts:4` shows friendly `Stripe not configured — set STRIPE_SECRET_KEY…` when placeholder `sk_test_...`/`whsec_...` is still in `.env` (click `Pay with Stripe` with no keys).
+
+## Ops
+
+| Task | Command / place |
+| :--- | :--- |
+| Gate | `bun test` (`82`) · `bun run typecheck` · `bun run lint` · `bun run build` |
+| Deploy | `git push origin main` — git-connected, Production builds and aliases itself |
+| Manual deploy | `vercel --prod` (creates a CLI deployment; not the normal path) |
+| Hosted token | **expires `2026-12-21T13:07Z`** — rotation runbook in `docs/STATE.md` §5 |
+| Expiry alarm | `.github/workflows/db-token-expiry.yml` runs daily, **failing from 2026-12-07** (14 days out) and emailing the workflow author |
+| Incidents / live state | `docs/rca/` · `docs/STATE.md` |
+
+Two things to know before touching auth or the hosted credentials. The middleware runs on the **edge** and cannot query the database, so it must never infer authentication from a cookie's *presence* — only a page can validate a session, and `src/middleware.test.ts` pins that (inferring auth from presence alone once produced an infinite `/` ⇄ `/login` loop, `ERR_TOO_MANY_REDIRECTS`). And because Vercel pins env **per deployment**, rotating the hosted credentials requires redeploying **both** Production and Preview, or Preview silently keeps the retired value.
 
 ## Demo logins
 
