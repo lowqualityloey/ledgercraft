@@ -2,7 +2,7 @@
 
 - **Date**: 2026-09-23
 - **Severity**: High for credential hygiene — a security-relevant command reports success while doing nothing
-- **Status**: Root-caused; workaround applied to this repo; upstream report prepared (see §7)
+- **Status**: Root-caused; workaround applied to this repo; upstream report **drafted but deliberately NOT filed** — kept local by decision (see §7)
 - **Affects**: `turso` CLI v1.0.32 (latest release, 2026-08-17) · Linux/WSL2 x86_64 · any Turso database that belongs to a group (i.e. every database created via the CLI)
 
 ---
@@ -116,9 +116,10 @@ verify 6s, Vercel wiring 7s, redeploy `Ready` 52s), with `/login` static through
 | :--- | :--- | :--- | :--- |
 | 1 | Apply the working rotation to `ledgercraft`; retire all 7 stale tokens | Assistant | Done 2026-09-23 (`a09d0413229e` live) |
 | 2 | Record the correct mechanism + runbook in `docs/STATE.md` §5 | Assistant | Done |
-| 3 | Report the no-op to Turso upstream | Assistant | Report prepared (below), **awaiting go-ahead to file publicly** |
+| 3 | Report the no-op to Turso upstream | — | **Not filed — deliberate decision 2026-09-23.** The report below is ready to file verbatim if that changes; the defect is recorded here regardless. |
 | 4 | Re-check `turso group tokens invalidation` behaviour after any CLI upgrade | Anyone | Open |
 | 5 | Consider `--expiration` on future database tokens so a stranded token self-expires | Anyone | Open — recommended |
+| 6 | If the no-op is ever hit again, re-run the §4 reproduction on throwaway infra before trusting `Success!` | Anyone | Open |
 
 Item 5 is the real lesson: because rotation is the *only* revocation mechanism for SQL tokens, a token
 minted with the default `-e never` that outlives its rotation plan has no backstop. Prefer a bounded
@@ -126,11 +127,13 @@ expiry so an unnoticed failure self-heals.
 
 ---
 
-## Appendix: upstream report prepared for filing
+## Appendix: upstream report (drafted, not filed)
 
-Target: `tursodatabase/turso-cli` (issue #452, *"Invalidating individual database tokens?"*, is related
-and adjacent — it requests per-token revocation and states that group-level invalidation is the
-supported path, which §4 shows is not true for grouped databases).
+Written to be filed verbatim against `tursodatabase/turso-cli` — **it was not submitted**; it is kept
+here as the durable record of the finding. The `<!-- BEGIN/END FILED REPORT -->` markers below exist
+so the text can be extracted unchanged if it is ever filed. (Issue #452, *"Invalidating individual
+database tokens?"*, is the adjacent open request; it asks for per-token revocation and states that
+group-level invalidation is the supported path, which §4 shows is not true for grouped databases.)
 
 <!-- BEGIN FILED REPORT -->
 ### `turso group tokens invalidate` reports success but does not invalidate database tokens
