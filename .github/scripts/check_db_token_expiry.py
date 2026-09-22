@@ -11,8 +11,9 @@ Rotating the token therefore means editing that one line; this script deliberate
 keeps no second copy of the date, so the record cannot drift away from the check.
 
 Why this exists: the failure it guards against is **silent**. An expired token
-fails every DB-backed route with no alert, while `/login` is static and keeps
-returning 200 - so the app looks partly alive and nothing announces the problem.
+fails every DB-backed route with no alert, while `/login` keeps answering `200`
+to anyone without a session cookie (its `GET` returns before any database read) -
+so the app looks partly alive and nothing announces the problem.
 
 Design notes
 

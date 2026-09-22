@@ -108,7 +108,12 @@ turso auth api-tokens revoke <name>
 Ordering is forced: rotation invalidates **every** token issued for the database, including one minted
 seconds earlier, and Vercel only applies env changes to new deployments — so a short window of failing
 authenticated routes is unavoidable. Measured for this app: **63s** end-to-end (rotate 1s, mint 4s,
-verify 6s, Vercel wiring 7s, redeploy `Ready` 52s), with `/login` static throughout.
+verify 6s, Vercel wiring 7s, redeploy `Ready` 52s), with `/login` still answering `200` to
+cookie-less requests throughout. **Correction:** an earlier version of this line said `/login` is
+"static", which is wrong — it is `ƒ` dynamic, because its `GET` awaits `cookies()`. The real reason it
+survives is `getSession()` returning `null` *before* any database read when no session cookie is
+present (`src/lib/session.ts:8`); with a cookie it would call `validateSession` and hit the database
+like any other route.
 
 ## 7. Actions
 

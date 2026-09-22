@@ -2,9 +2,10 @@ name: DB token expiry guard
 
 # The production database token is minted with a bounded expiry (90 days at the
 # time of writing, see docs/STATE.md section 5). That expiry does not announce
-# itself: every DB-backed route starts failing while /login is static and keeps
-# returning 200, so the breakage is partial and nothing reports it. This job is
-# the announcement - it starts failing 14 days before the deadline.
+# itself: every DB-backed route starts failing while /login keeps answering 200
+# to anyone without a session cookie (its GET returns before any database read),
+# so the breakage is partial and nothing reports it. This job is the
+# announcement - it starts failing 14 days before the deadline.
 #
 # GitHub emails the user who last modified the cron schedule when a scheduled
 # workflow fails, which is how the owner actually gets told.
