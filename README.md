@@ -1,106 +1,235 @@
 # LedgerCraft
 
-Rock-solid double-entry bookkeeping for freelancers — local-first, auth-gated, multi-currency, Stripe Checkout.
+Double-entry bookkeeping for freelancers, with a login in front of every page.
 
-`M1–M7` shipped, now on a hosted ledger — `82/82` `bun test`, `tsc`/`lint`/`build` `13` routes `ƒ /api/stripe/webhook` + `Proxy`. Local dev/test stay on `file:./ledger.db`; Production/Preview use hosted libSQL (Turso) so writes survive cold starts.
+You keep a chart of accounts, record journal entries that must balance, raise
+invoices for clients, import bank statements from CSV, and take payment through
+Stripe Checkout. The app is "local-first": you run it on your own machine
+against a SQLite file, and production runs the same code against a hosted libSQL
+database (Turso) so that data survives redeploys.
 
-## Features
+**Status:** milestones M1–M7 are shipped. `bun test` passes **82 tests across 8
+files**, and `bun run build` compiles **13 routes**.
 
-| Milestone | What |
+## What it does
+
+| Milestone | What you can do |
 | :--- | :--- |
-| M1 Core | CoA `15` (`1000` Cash, `4000` Income…), balanced `Dr==Cr` journal (`INV-01`), `TB`/`P&L`, `17` tests |
-| M2 Invoicing | `Client` + `Invoice` `UNPAID→PAID`, `VOID` via reversals (`INV-03`), `30` tests |
-| M3 CSV Import | `parseCsv` + `fingerprint` + `postDrafts` (`Cash 1000` + offset), `14` tests |
-| M4 PDF Receipt | `GET /invoices/[id]` + `InvoiceReceipt` + `@media print` `PrintButton`, `10` routes |
-| M5 Auth | `User`/`Session` `bcryptjs@3.0.3` opaque `64hex` `7d` `httpOnly` `SameSite Lax` `Secure` `Proxy` `307` + `/login`, `53` tests |
-| M6 Multi | `Currency` `USD/EUR/GBP/JPY/CAD/AUD` + `fxRateBps` `10000=1.00` + `convertCents` integer `Math.round(c*fx/10000)` + dual `EUR 200.00 → USD 230.00`, `62` tests |
-| M7 Stripe | `Invoice.stripeSessionId` + `StripeEvent` `stripe@19.1.0` `createCheckout` `unit_amount=baseTotalCents` `usd` `client_reference_id` + `POST /api/stripe/webhook` raw `constructEvent` + `p-stripe-<evt>` idempotency + `Pay with Stripe` on `UNPAID` |
+| **M1** Core ledger | Keep a chart of accounts (15 seeded), post balanced journal entries, and read a trial balance and profit & loss report. |
+| **M2** Clients & invoices | Keep a client list, raise invoices that move `UNPAID` → `PAID`, and correct mistakes with reversing entries rather than edits. |
+| **M3** CSV import | Import a bank statement as CSV. Rows are fingerprinted so re-importing the same file does not double-post, and each row posts to Cash plus the offset account you choose. |
+| **M4** Receipts | Print an invoice receipt from `/invoices/[id]`. |
+| **M5** Accounts & login | Sign in with an email and password, with 7-day sessions and every page behind the login wall. |
+| **M6** Multi-currency | Work in USD, EUR, GBP, JPY, CAD or AUD. Rates are stored as basis points and amounts as integer cents, so no money ever passes through a floating-point number. |
+| **M7** Stripe | Pay an unpaid invoice through Stripe Checkout, with a signature-verified and idempotent webhook marking it paid. |
 
-Invariants: `INV-01` balanced fail-closed, `INV-02` integer cents + `convertCents` no float, `INV-03` append-only, `INV-04` evolved to auth wall (`file:./ledger.db` for local dev/test → hosted `libsql://` on Vercel).
+There is no sign-up flow. Accounts are created by the seed script (see
+[Signing in](#signing-in)).
 
-## Stack
+### Guardrails the app enforces
 
-`Next 16.3.5` `React 19` `TypeScript strict` `Bun 1.4.2` `Prisma 7.10.0` `SQLite/libSQL` `@prisma/adapter-libsql@7.10.0` `@libsql/client@^0.18` `Tailwind 4` `bcryptjs@3.0.3` `stripe@19.1.0` `zod@4.6.5`.
+These are the rules the code defends, and each one is covered by tests:
 
-## Quick start (local)
+- **A journal entry must balance.** If debits and credits disagree, the entry is
+  rejected and nothing is written — not a partial write, nothing.
+- **Money is never a float.** Every amount is an integer count of cents, and
+  currency conversion rounds explicitly.
+- **The ledger is append-only.** A posting is never edited or deleted; a
+  correction is a new, linked reversing entry.
+- **Every page requires a session.** There is no anonymous or shared mode.
+- **Posting is idempotent.** Repeating a request with the same key returns the
+  original entry instead of creating a second one.
+
+## Run it locally
+
+You need [Bun](https://bun.sh) installed. From the project root:
 
 ```bash
 bun install
-bunx prisma generate
-DATABASE_URL="file:./ledger.db" bunx prisma migrate deploy # creates ledger.db on a fresh clone (the file is no longer committed)
-bun prisma/seed.ts # CoA 15 + owner@ledgercraft.local / owner-pass-123 + accountant@ledgercraft.local / acct-pass-12345
-bun dev --port 3000 # http://localhost:3000/login
-bun test # 82 pass
-bun run typecheck; bun run lint; bun run build # 13 routes incl. ƒ /api/stripe/webhook + Proxy
+bunx prisma generate                                  # build the Prisma client into src/generated
+DATABASE_URL="file:./ledger.db" bunx prisma migrate deploy   # create the local database
+bun prisma/seed.ts                                    # 15 accounts + the two demo users
+bun dev                                               # http://localhost:3000/login
 ```
 
-`ledger.db` is the local dev/test database: gitignored and **no longer tracked** (it was force-committed only for the retired `/tmp` deploy copy), so it stays out of `git status`. The `migrate deploy` line above is what builds it — the explicit `file:` `DATABASE_URL` matters because the Prisma CLI cannot read `libsql://` and `prisma7.config.ts` loads only `.env`. Hosted environments use a remote libSQL URL instead.
+Then check your work the way CI does:
 
-## Env
+```bash
+bun test          # 82 tests
+bun run typecheck # tsc --noEmit
+bun run lint      # eslint
+bun run build     # next build, 13 routes
+```
 
-`.env` holds the **hosted** libSQL URL + token (Vercel, and any by-hand remote op). Local modes are kept off it by two committed, secret-free mode files, with a gitignored per-machine override layer on top. Next.js and Bun agree on the order (lowest → highest precedence): `.env` → `.env.<mode>` → `.env.local` → `.env.<mode>.local`:
+Two details in that first block are worth knowing. The database file,
+`ledger.db`, is **not** committed — the `migrate deploy` line is what creates it,
+so a fresh clone starts empty. And that line needs the explicit
+`DATABASE_URL="file:./ledger.db"` because the Prisma CLI cannot read a
+`libsql://` URL and `prisma7.config.ts` only loads `.env`.
 
-| File | Tracked? | Applies to | Value |
+`bun run build` runs `prisma generate` first on purpose: the generated client
+lives in `src/generated`, which is gitignored, so a build without that step fails
+with `Module not found`.
+
+## How the database is chosen
+
+`.env` points at the **hosted** database. That is what Vercel reads, and what you
+want for any by-hand operation against production. Local development and tests
+are kept away from it by two committed mode files, with an optional per-machine
+override on top:
+
+| File | Committed? | Used by | Contains |
 | :--- | :--- | :--- | :--- |
+| `.env` | no | Vercel, manual remote work | the hosted `libsql://` URL and token |
 | `.env.development` | **yes** | `bun dev`, `next dev` | `DATABASE_URL="file:./ledger.db"` |
 | `.env.test` | **yes** | `bun test` | `DATABASE_URL="file:./ledger.db"` |
-| `.env.development.local` | no (gitignored) | `bun dev`, `next dev` | this machine's override |
-| `.env.test.local` | no (gitignored) | `bun test` | this machine's override |
+| `.env.local` | no | every mode | your local overrides |
+| `.env.development.local` | no | `bun dev`, `next dev` | your machine's override |
+| `.env.test.local` | no | `bun test` | your machine's override |
 
-Because the two mode files are committed, **a fresh clone cannot point development or tests at the hosted ledger** — not even if `.env` holds a `libsql://` URL. To deliberately run a mode against the hosted database, put it in `.env.local` (or the mode-local file), or export `DATABASE_URL` in the shell; an exported variable outranks every `.env*` file. `.env.example` has the full placeholder set:
+Later files win, so the precedence is `.env` → `.env.<mode>` → `.env.local` →
+`.env.<mode>.local`. An environment variable you export in your shell outranks
+all of them.
+
+Because the first two mode files are committed, **a fresh clone cannot point
+development or tests at the hosted ledger** — not even if `.env` holds a live
+`libsql://` URL. This matters more than it sounds: the test suite drives the real
+Prisma client and creates and deletes users and sessions, so a test run against
+production would write real fixtures into it. `.env.example` lists the full
+placeholder set:
 
 ```
-DATABASE_URL="file:./ledger.db" # local default; hosted: libsql://<db>-<org>.turso.io + DATABASE_AUTH_TOKEN
+DATABASE_URL="file:./ledger.db"
 AUTH_SECRET="change-me-in-prod-32-chars-min"
 STRIPE_SECRET_KEY="sk_test_..."
 STRIPE_WEBHOOK_SECRET="whsec_..."
-NEXT_PUBLIC_BASE_URL="http://localhost:3000" # hosted: https://ledgercraft-ivory.vercel.app
+NEXT_PUBLIC_BASE_URL="http://localhost:3000"
 ```
 
-## Hosted (Vercel)
+## Deploying to Vercel
 
-`https://ledgercraft-ivory.vercel.app` `● Ready` — Production. The project **is git-connected**: every push to `main` builds and aliases automatically (~30s), so shipping a fix is just `git push origin main`.
+Production lives at **https://ledgercraft-ivory.vercel.app**. The project is
+git-connected, so the normal way to ship is simply:
 
 ```bash
-vercel login
-vercel --prod # manual fallback; the normal path is `git push origin main`
-# Vercel Dashboard → Settings → Environment Variables (Production + Preview)
-# DATABASE_URL=libsql://<db>-<org>.turso.io, DATABASE_AUTH_TOKEN, NEXT_PUBLIC_BASE_URL=https://ledgercraft-ivory.vercel.app, STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET
+git push origin main   # Vercel builds and aliases Production, usually in ~30s
 ```
 
-Hosted schema: Prisma's CLI cannot talk to `libsql://` (`P1013`), so migrations are applied over `@libsql/client` from `prisma/migrations/*/migration.sql`.
+`vercel --prod` still works if you want a deploy straight from your machine, but
+it is not the usual path.
 
-Stripe Dashboard `Add endpoint` `https://ledgercraft-ivory.vercel.app/api/stripe/webhook` → `checkout.session.completed` → `whsec_…`. For local: `stripe listen --forward-to localhost:3000/api/stripe/webhook` (prints `whsec_…`).
+Production and Preview each need their own environment variables, set in Vercel
+under **Settings → Environment Variables**:
 
-`src/lib/stripe.ts:4` shows friendly `Stripe not configured — set STRIPE_SECRET_KEY…` when placeholder `sk_test_...`/`whsec_...` is still in `.env` (click `Pay with Stripe` with no keys).
+```
+DATABASE_URL=libsql://<db>-<org>.turso.io
+DATABASE_AUTH_TOKEN=<token>
+NEXT_PUBLIC_BASE_URL=https://ledgercraft-ivory.vercel.app
+STRIPE_SECRET_KEY=<key>
+STRIPE_WEBHOOK_SECRET=<secret>
+```
 
-## Ops
+**Migrations are applied differently in the hosted environment.** Prisma's CLI
+cannot talk to a `libsql://` URL (it fails with `P1013: The scheme is not
+recognized in database URL`), so migrations are applied over `@libsql/client`
+from the SQL files in `prisma/migrations/*/migration.sql`.
 
-| Task | Command / place |
+**Stripe** needs an endpoint pointed at
+`https://ledgercraft-ivory.vercel.app/api/stripe/webhook`, subscribed to
+`checkout.session.completed`, whose signing secret goes in
+`STRIPE_WEBHOOK_SECRET`. For local work, `stripe listen --forward-to
+localhost:3000/api/stripe/webhook` prints a `whsec_…` you can use instead. If
+`STRIPE_SECRET_KEY` is still the `sk_test_...` placeholder, the app shows a
+friendly "Stripe not configured" message rather than failing.
+
+## Operations
+
+| Task | Where |
 | :--- | :--- |
-| Gate | `bun test` (`82`) · `bun run typecheck` · `bun run lint` · `bun run build` |
-| Deploy | `git push origin main` — git-connected, Production builds and aliases itself |
-| Manual deploy | `vercel --prod` (creates a CLI deployment; not the normal path) |
-| Hosted token | **expires `2026-12-21T13:07Z`** — rotation runbook in `docs/STATE.md` §5 |
-| Expiry alarm | `.github/workflows/db-token-expiry.yml` runs daily, **failing from 2026-12-07** (14 days out) and emailing the workflow author |
-| Incidents / live state | `docs/rca/` · `docs/STATE.md` |
+| Check your work | `bun test` · `bun run typecheck` · `bun run lint` · `bun run build` |
+| Deploy | `git push origin main` |
+| Hosted database token | **expires `2026-12-21T13:07Z`** — rotation runbook in `docs/STATE.md` §5 |
+| Expiry alarm | `.github/workflows/db-token-expiry.yml` runs daily and starts failing on **2026-12-07**, 14 days out, emailing whoever last touched the workflow |
+| Incidents and live state | `docs/rca/` and `docs/STATE.md` |
 
-Two things to know before touching auth or the hosted credentials. The middleware runs on the **edge** and cannot query the database, so it must never infer authentication from a cookie's *presence* — only a page can validate a session, and `src/middleware.test.ts` pins that (inferring auth from presence alone once produced an infinite `/` ⇄ `/login` loop, `ERR_TOO_MANY_REDIRECTS`). And because Vercel pins env **per deployment**, rotating the hosted credentials requires redeploying **both** Production and Preview, or Preview silently keeps the retired value.
+Two things to know before touching auth or the hosted credentials, both learned
+the hard way:
 
-## Demo logins
+- **The middleware runs on the edge and cannot query the database.** It can see
+  that a cookie exists, but not whether the session behind it is still valid, so
+  it must never treat a cookie as proof of authentication — only a page can
+  validate a session. Inferring auth from cookie *presence* once produced an
+  infinite `/` ⇄ `/login` loop, which the browser reported as
+  `ERR_TOO_MANY_REDIRECTS`. `src/middleware.test.ts` pins the correct behaviour.
+- **Vercel pins environment variables per deployment.** Changing a credential
+  does nothing to deployments that already exist, so rotating the database token
+  means redeploying **both** Production and Preview. Redeploying only Production
+  silently leaves Preview broken.
+
+## Tests
+
+`bun test` runs 82 tests across 8 files. The suite uses the real Prisma client
+against the local database file, not mocks, which is why the committed `.env.test`
+that pins it to `file:./ledger.db` is load-bearing.
+
+| File | Tests | Covers |
+| :--- | :--- | :--- |
+| `src/lib/invoicing.test.ts` | 17 | Invoices, payments, voids and reversals |
+| `src/lib/csvImport.test.ts` | 14 | CSV parsing, fingerprinting, draft posting |
+| `src/lib/datasource.test.ts` | 13 | Which database URL is used, and token handling |
+| `src/lib/money.test.ts` | 9 | Cents parsing, formatting and FX conversion |
+| `src/lib/auth.test.ts` | 9 | Password hashing, sessions, expiry |
+| `src/middleware.test.ts` | 7 | Routing and the login wall, including stale cookies |
+| `src/lib/ledger.test.ts` | 7 | Balanced posting, idempotency, reversals |
+| `src/lib/journal.test.ts` | 6 | Journal entry rules |
+
+## Signing in
 
 | Email | Password |
 | :--- | :--- |
 | `owner@ledgercraft.local` | `owner-pass-123` |
 | `accountant@ledgercraft.local` | `acct-pass-12345` |
 
-## Routes (all behind `Proxy` `307` → `/login` when unauthed)
+These are development credentials created by `prisma/seed.ts`, not secrets.
 
-`/` `/_not-found` `/accounts` `/clients` `/imports` `/invoices` `ƒ /invoices/[id]` `/journal` `ƒ /login` `/profit-loss` `/trial-balance` `ƒ /api/stripe/webhook` `ƒ Proxy (Middleware)`.
+## Routes
+
+Every route is dynamic (`ƒ`, rendered per request) except the 404 page, because
+all of them depend on the session:
+
+`/` `/accounts` `/clients` `/imports` `/invoices` `/invoices/[id]` `/journal`
+`/login` `/profit-loss` `/trial-balance` `/api/stripe/webhook` `/_not-found`
+
+That is 12 app routes plus the `Proxy (Middleware)` entry, making 13 in the build
+output. Without a session, every page redirects to `/login` — except `/login`
+itself and the 404 page — while the Stripe webhook authenticates by request
+signature rather than by cookie.
+
+## Built with
+
+Next.js 16.3.5 · React 19.2.8 · TypeScript (strict) · Bun 1.4.2 · Prisma 7.10.0
+with `@prisma/adapter-libsql` · SQLite locally and libSQL in production ·
+Tailwind 4 · bcryptjs for password hashing · Stripe 19.1.0 · zod for validation.
+
+## Project layout
+
+| Path | What lives there |
+| :--- | :--- |
+| `src/app/` | Routes and pages (App Router) |
+| `src/actions/` | Server actions — the write path for ledger, invoicing, imports and Stripe |
+| `src/components/` | Forms and UI pieces |
+| `src/lib/` | Domain logic: money, ledger, journal, invoicing, CSV import, auth, sessions, database, Stripe |
+| `src/middleware.ts` | Routing and the login wall |
+| `prisma/` | Schema, six migrations, and the seed script |
+| `src/generated/` | Prisma client, gitignored and rebuilt by `prisma generate` |
+| `docs/` | Live project state (`STATE.md`), ADRs, specs and post-mortems |
 
 ## Later ledger
 
-All shipped: `M2` invoicing, `M3` CSV, `M4` PDF, `M5` auth, `M6` multi-currency, `M7` Stripe. Hosted persistence shipped too — Turso `libsql://` replaced the per-lambda `/tmp` file. Next: `Stripe` live cutover, FX revaluation.
+Everything planned has shipped: invoicing, CSV import, PDF receipts, auth,
+multi-currency and Stripe. Hosted persistence is done too — the hosted libSQL
+database replaced an earlier per-instance `/tmp` file whose writes did not
+survive cold starts. Next up: Stripe live keys, and FX revaluation.
 
 ## License
 
