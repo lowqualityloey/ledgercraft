@@ -2,11 +2,11 @@
 
 ## 1. Executive Summary & Current Position
 - **Project Name**: LedgerCraft
-- **Current Milestone / Epic**: Milestones 1–7 shipped (2026-09-17); Vercel build repaired (2026-09-18) and the ledger moved onto a hosted libSQL database (Turso), now committed → Next: Turso token rotation / polish / release TBD
+- **Current Milestone / Epic**: Milestones 1–7 shipped (2026-09-17); Vercel build repaired (2026-09-18) and the ledger moved onto a hosted libSQL database (Turso), now committed; PromptKit OS engine rebaselined as a pinned submodule with the generated agent config committed (2026-09-22) → Next: Turso token rotation / polish / release TBD
 - **Overall Status**: ACTIVE <!-- Options: ACTIVE | PAUSED | STABILIZING | RELEASE_CANDIDATE | COMPLETED (all milestones closed, release evidence archived, zero open blockers — recording stops here) -->
 - **Target Release / Deadline**: none (local → hosted; M7 live with Stripe test keys; ledger writes are now durable on Turso)
-- **Current Working Branch**: main (`56c1cd4`)
-- **Last Updated**: 2026-09-18 (hosted libSQL migration — Turso `ledgercraft` migrated + seeded, Production/Preview env switched, login write verified persistent across environments, work committed in three atomic commits; 75/75 green)
+- **Current Working Branch**: main (`bb54381`)
+- **Last Updated**: 2026-09-22 (PromptKit OS tooling baseline — engine fast-forwarded 60 commits to `e539627` and registered as a pinned submodule, generated agent directives + `.github` templates committed, tracker declared `tracking: local` + `projection: github`, the 2026-09-17 closeout records archived and their stale file inventories corrected. No application code touched and no test suite run, so this entry claims no green gate)
 
 ---
 
@@ -145,9 +145,9 @@ Staging area for rules observed during sessions but not yet approved as invarian
 - **Blockers**: none
 - **Architectural Questions**:
   - All Later ledger shipped (M2 invoicing, M3 CSV, M4 PDF, M5 auth, M6 multi-currency, M7 Stripe) — polish / release TBD.
-  - Remote now present: `origin` → `github.com:lowqualityloey/ledgercraft` (2026-09-18), so `pk:pr` is unblocked; `PROMPTKIT.md` `tracking: github` matches, but that edit is still uncommitted.
+  - Remote now present: `origin` → `github.com:lowqualityloey/ledgercraft` (2026-09-18), so `pk:pr` is unblocked. Tracker — **resolved 2026-09-22** (`2e12128`): `PROMPTKIT.md` declares `tracking: local` + `projection: github`, so the `docs/tasks/` Task Record stays authoritative and GitHub Issues mirror it via the authenticated `gh` CLI. The earlier bare `tracking: github` and a line-64-vs-line-118 disagreement inside `PROMPTKIT.md` are both gone.
 - **Technical Debt & Risks**:
-  - Pre-existing init dirt untracked (`.clinerules/`, `.github/`, `.gitmodules`, `.opencode/`, `.promptkit/`, `AGENTS.md`) — surfaced, never staged; decide keep/commit separately.
+  - Pre-existing init dirt — **resolved 2026-09-22**: nothing in that set is untracked any more. `.promptkit/` + `.gitmodules` are a pinned git submodule (gitlink `e539627`, engine `v1.8.0-92-ge539627`) per `0214df8`; `.clinerules/`, `.github/`, `.opencode/`, `AGENTS.md` and `GEMINI.md` were committed in `e4f198c`. Consequence worth keeping: `.promptkit/workflows/` and `.promptkit/protocols/` are now versioned and authoritative — read them from disk each turn instead of recalling an earlier session, and move the pin deliberately with `git submodule update --remote --merge .promptkit`.
   - Generated Prisma client (`src/generated/`) gitignored — **resolved 2026-09-18**: build script runs `prisma generate && next build` (`0bbb0f2`), so fresh clones and CI both generate it; `bunx prisma generate` remains the standalone fallback.
   - Vercel build once failed (`Module not found: '@/generated/prisma/client'`) because `next build` ran without codegen — fixed `0bbb0f2`; do not drop `prisma generate` from the build script.
   - INV-04 evolution in M5: "no auth, local single-owner" → "auth wall, shared ledger (2 users), still local SQLite"; row-level tenant isolation deferred — track as risk if accountant read-only is needed (see `ASSUMPTION-auth-multi-user-002`).
@@ -176,7 +176,7 @@ Staging area for rules observed during sessions but not yet approved as invarian
 2. Rotate the Turso tokens: the platform token passed through chat and the database token was minted from it; mint a fresh database token and update Vercel + `.env`.
 3. ~~Decide the local `.env` target~~ — **done 2026-09-18**: dev/test pinned to `file:./ledger.db` by `.env.development.local` + `.env.test.local`; the `ca8d043`-era `/tmp` guidance in README is gone.
 4. ~~Decide the `ledger.db` drift~~ — **done 2026-09-18**: untracked (`git rm --cached`) and the blob purged from `main` via a history rewrite + force-push.
-5. Optional: `pk:pr` — remote `origin` is configured; commit the local-isolation docs first (`.env.example`, `README.md`, `docs/STATE.md`, task-record §5) and the remaining init dirt.
+5. Optional: `pk:pr` — remote `origin` is configured. The init dirt is committed as of 2026-09-22 (`0214df8` engine pin, `e4f198c` host directives + templates), so only the local-isolation docs (`.env.example`, `README.md`, `docs/STATE.md`, task-record §5) remain before opening a PR.
 6. `bun dev` daily driver (`:3000`): login at `/login`, then journal at `/journal`, invoices at `/invoices` (+ receipts with EUR→USD, `Pay with Stripe` when UNPAID), imports at `/imports`, reports at `/trial-balance` + `/profit-loss` — all behind auth wall (hosted webhook at `/api/stripe/webhook`).
 7. Polish / release: Stripe live keys cutover, FX revaluation, or CSV multi-currency — via `pk:plan`.
 
@@ -198,6 +198,7 @@ Compact record of pairing sessions to enable instant chat resumption:
 | 2026-09-18 | Assistant (pk:debug→fix→commit→checkpoint) | Vercel deployment repair (L2 inspected → L1 commit) | Root-caused prod/preview build failures: `Module not found: '@/generated/prisma/client'` — Prisma 7 `prisma-client` generator writes `src/generated/prisma` (gitignored) and `next build` never regenerated it; build script now `prisma generate && next build`; verified clean local build, Vercel preview + production Ready, login POST issues session cookie, all 8 authed routes 200, 62/62 + tsc/build green; commit `0bbb0f2` |
 | 2026-09-18 | Assistant (pk:plan→db→ship) | Hosted libSQL migration (Turso) | Turso `ledgercraft` created by the user; diagnosed that the supplied token was a control-plane token (claims `jti`/`org_id` → HTTP 401) and minted a database-scoped token from it; six migrations applied via `@libsql/client` (Prisma CLI cannot reach `libsql://` — P1013) + seed 15 accounts / 2 users; `DATABASE_URL` + `DATABASE_AUTH_TOKEN` set for Production + Preview; added `TURSO_DATABASE_URL` aliasing to the resolver; login POST on Production and Preview both issue sessions, read back from the hosted DB and cross-accepted between environments; `eslint` `globalIgnores` gained `.kilo/**`; 75/75 green, lint/build clean |
 | 2026-09-18 | Assistant (isolation + git hygiene) | Local dev/test isolation + `ledger.db` blob purge | `.env.development.local` + `.env.test.local` pin `bun dev`/`bun test` to `file:./ledger.db` (local-only session 200s on five routes; signed webhook write landed locally with 0 rows hosted); found `bun test` had been writing auth fixtures to the hosted DB; `git rm --cached ledger.db` untracked the local DB; `git filter-repo` in a mirror clone + `main` force-pushed `20f9ecc`→`398b24e`, remote verified blob-free; 26 doc SHA references remapped |
+| 2026-09-22 | Assistant (pk:sync→commit) | PromptKit OS tooling baseline (no application code) | Checked out `.promptkit` — the engine sat at `423d492` (60 commits behind); pulled `origin/main` to `e539627` (`v1.8.0-92`) and re-ran `init.sh` (profile `balanced`, hosts `opencode,gemini,cline` all preserved; 4 host directive blocks refreshed); then made the pin real rather than ambient: `0214df8` registered `.promptkit` + `.gitmodules` as a gitlink and `absorbgitdirs` moved the embedded repo to `.git/modules/.promptkit`, so `git submodule update --remote --merge .promptkit` now exits 0 (it previously failed with `pathspec '.promptkit' did not match any file(s) known to git`); `e4f198c` committed the 4 identical host directive copies + `.github` PR/issue templates, deliberately excluding the 21 MB `.opencode/node_modules` tree that `.opencode/.gitignore` self-excludes; `2e12128` resolved a tracker disagreement where line 64 said `tracking: local` while line 118 said `github`, settling on `local` + `projection: github` and verified idempotent by re-running `init.sh` (all 5 files byte-identical after); `cf271cf` archived the 2026-09-17 checkpoint/handoff records, which were untracked and therefore had no history to recover from; `bb54381` added dated `§7 Post-Closeout Corrections` to both handoffs instead of rewriting their point-in-time snapshots, since both still described `.promptkit/` and `AGENTS.md` as untracked init dirt |
 
 ---
 
@@ -211,5 +212,6 @@ Compact record of pairing sessions to enable instant chat resumption:
 | 2026-09-18 (Vercel repair + commit + checkpoint) | ~8 turns | host telemetry unavailable | ~80k tok total (~8k–15k tok/turn) | Vercel CLI + Vercel-hosted build/log inspection, 1 commit (`0bbb0f2`); host exposes no per-turn metering |
 
 | 2026-09-18 (hosted libSQL migration) | ~40 turns | host telemetry unavailable | not measured | Turso provisioning + credential diagnostics (401 root cause = platform token), migrations applied via `@libsql/client`, Vercel env for Production/Preview, two deploys, persistence proofs; host exposes no per-turn metering |
+| 2026-09-22 (PromptKit tooling baseline) | ~10 turns | host telemetry unavailable | not measured | Submodule update + `init.sh` refresh + 5 hygiene commits (`0214df8`, `e4f198c`, `2e12128`, `cf271cf`, `bb54381`); no application code touched and no test suite run, so no green-gate claim is made for this session |
 
-- **Running total**: 5 sessions logged — measured figures unavailable; estimates only where the host exposed them.
+- **Running total**: 6 sessions logged — measured figures unavailable; estimates only where the host exposed them.
