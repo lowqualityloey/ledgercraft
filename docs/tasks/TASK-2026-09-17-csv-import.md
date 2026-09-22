@@ -76,6 +76,7 @@
 - **Start Time**: `2026-09-17 UTC`
 - **Current Actor**: `Assistant (M3 shipped)`
 - **Next Action**: `None — M3 complete; Later ledger remains: PDF, auth/multi-user, multi-currency, Stripe`
+- **Branch / Revision**: `main @ 539de27` (plan `bcf62fa` + build `539de27`; the record was archived in `cf271cf` on 2026-09-22, which is record-keeping rather than part of this task)
 
 ### Transition History
 

@@ -86,7 +86,23 @@ happen, and notes it was created on 2026-09-23.
 | No secrets introduced | every commit's added lines scanned for JWTs, libsql URLs, Turso hosts, Stripe keys, webhook secrets, 32+ char runs and credential assignments — all zero |
 | Application untouched | no file under `src/`, `prisma/` or the configs was modified; the test suite was therefore not re-run for these documentation commits |
 
-## 6. Known remaining items (not part of this cleanup)
+## 6. Revision convention adopted here
+
+`Branch / Revision` names the task's **own final commit**, not the last commit that happened to touch its
+file. The distinction is real in this repository: M2's record was amended afterwards by M3's planning
+commit (`bcf62fa`) and M3's record by the 2026-09-22 archival commit (`cf271cf`) — both are other
+work crossing the file, so neither is that task's revision. Where a task has both a product commit and
+a later milestone close-out, the close-out wins (`edb4f30` over `df3b5de`, `98b44cc` over `476437b`,
+`d83073c` over `d1a1a92`); where the plan and the build differ, the build wins (`539de27` over
+`bcf62fa`).
+
+Scope note, since it is easy to over-read these fields: the validator compares §3A's *one* `Task ID`
+against that record's revision. Filling the other six records therefore adds provenance and prepares
+the check for the next task projection — it does not widen coverage today. Verified by re-pointing
+§3A at each task in a throwaway docs root: `VALID` when the revision agrees, `REVISION_MISMATCH`
+naming that task when it does not.
+
+## 7. Known remaining items (not part of this cleanup)
 
 1. ~~**Strict mode reports 2**: two 2026-09-17 checkpoint snapshots carry no `Record Type`.~~
    **Resolved 2026-09-23**: both were promoted to full Checkpoint Records with their own

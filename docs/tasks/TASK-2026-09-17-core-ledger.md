@@ -91,6 +91,7 @@
 - **Start Time**: `2026-09-17 UTC`
 - **Current Actor**: `Assistant`
 - **Next Action**: `None — Milestone 1 complete; next milestone via pk:plan when ready`
+- **Branch / Revision**: `main @ 6dc9529` (product `9a4f250` + this record `6dc9529`)
 
 ### Transition History
 

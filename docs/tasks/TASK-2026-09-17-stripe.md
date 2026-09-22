@@ -85,6 +85,7 @@
 - **Start Time**: `2026-09-17 UTC`
 - **Current Actor**: `Assistant (M7 shipped)`
 - **Next Action**: `None — M7 complete; all Later ledger shipped`
+- **Branch / Revision**: `main @ d83073c` (product `d1a1a92` + milestone close-out `d83073c`)
 
 ### Transition History
 

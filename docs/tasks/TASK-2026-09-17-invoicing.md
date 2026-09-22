@@ -76,6 +76,7 @@
 - **Start Time**: `2026-09-17 UTC`
 - **Current Actor**: `Assistant (M2 shipped)`
 - **Next Action**: `None — M2 complete; Later ledger remains: PDF, CSV, auth, multi-currency, Stripe`
+- **Branch / Revision**: `main @ 1e3361f` (scope `b2f9e1f` + product `1e3361f`; the record's commit-evidence line was later extended by M3's plan commit `bcf62fa`, which is not part of this task's work)
 
 ### Transition History
 

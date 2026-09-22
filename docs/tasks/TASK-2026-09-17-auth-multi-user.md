@@ -86,6 +86,7 @@
 - **Start Time**: `2026-09-17 UTC`
 - **Current Actor**: `Assistant (M5 shipped)`
 - **Next Action**: `None — M5 complete; Later ledger remains: multi-currency, Stripe`
+- **Branch / Revision**: `main @ edb4f30` (product `cde43b5` + `df3b5de` + milestone close-out `edb4f30`)
 
 ### Transition History
 

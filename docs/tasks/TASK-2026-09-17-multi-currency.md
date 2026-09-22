@@ -88,6 +88,7 @@
 - **Start Time**: `2026-09-17 UTC`
 - **Current Actor**: `Assistant (M6 shipped)`
 - **Next Action**: `None — M6 complete; Later ledger remains: Stripe`
+- **Branch / Revision**: `main @ 98b44cc` (product `476437b` + milestone close-out `98b44cc`; the scope record's `main @ 476437b` names where the migration was added, not this task's tip)
 
 ### Transition History
 

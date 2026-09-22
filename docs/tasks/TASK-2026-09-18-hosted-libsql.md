@@ -105,7 +105,7 @@ This closes the deviation noted in AC-5: hosting `DATABASE_URL` in `.env` had si
 - **Start Time**: `2026-09-18 UTC`
 - **Current Actor**: `user (solo freelancer, account owner) / Assistant (implementation)`
 - **Next Action**: `None — Milestone 8 is complete: the hosted database is live and local dev/test stay on file:./ledger.db. Later work on the same database (credential rotation, a bounded 90-day expiry, and a CI expiry guard) is recorded in docs/STATE.md section 5 and section 9.`
-- **Branch / Revision**: `main @ b1ddc0f`
+- **Branch / Revision**: `main @ b1ddc0f` (§5 isolation follow-up; the preceding completion commit is `398b24e`)
 
 > This record keeps its legacy dated ID, which is why the adaptation profile is `none`.
 
