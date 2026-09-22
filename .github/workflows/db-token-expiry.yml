@@ -30,6 +30,13 @@ on:
       - .github/workflows/db-token-expiry.yml
       - .github/scripts/check_db_token_expiry.py
   workflow_dispatch:
+    inputs:
+      warn_days:
+        description: >-
+          Fail when this many days or fewer remain. Leave at 14 for the real
+          check; raise it to exercise the alarm path on the runner.
+        required: false
+        default: "14"
 
 permissions:
   contents: read
@@ -47,5 +54,8 @@ jobs:
       - name: Check recorded database-token expiry
         env:
           STATE_FILE: docs/STATE.md
-          WARN_DAYS: "14"
+          # Populated only for workflow_dispatch; the scheduled and push runs fall
+          # back to 14. The script also treats an empty value as 14, so a dispatch
+          # without the input cannot turn the guard into a false alarm.
+          WARN_DAYS: ${{ inputs.warn_days || '14' }}
         run: python3 .github/scripts/check_db_token_expiry.py

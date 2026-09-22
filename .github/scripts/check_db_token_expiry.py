@@ -30,6 +30,9 @@ Environment:
     WARN_DAYS     fail at this many days remaining  (default: 14)
     NOW_OVERRIDE  ISO-8601 "now", for testing       (default: real now)
 
+WARN_DAYS is also a workflow_dispatch input, so the alarm path can be exercised
+on the runner on demand (dispatch with e.g. 365) instead of being taken on trust.
+
 Exit codes:
     0  more than WARN_DAYS remain
     1  within WARN_DAYS, or already expired
@@ -43,9 +46,13 @@ import os
 import re
 import sys
 
-STATE_FILE = os.environ.get("STATE_FILE", "docs/STATE.md")
-WARN_DAYS_RAW = os.environ.get("WARN_DAYS", "14")
-NOW_OVERRIDE = os.environ.get("NOW_OVERRIDE", "")
+# `or` rather than a get() default: an explicitly empty env var (which is what an
+# unpopulated workflow-dispatch input can produce) must fall back to the default
+# rather than raising - a false failure every day would train the reader to ignore
+# this guard, which costs more than the guard is worth.
+STATE_FILE = os.environ.get("STATE_FILE") or "docs/STATE.md"
+WARN_DAYS_RAW = os.environ.get("WARN_DAYS") or "14"
+NOW_OVERRIDE = os.environ.get("NOW_OVERRIDE") or ""
 
 # Authoritative record: the section 7 blockquote deadline line.
 ANCHORED = re.compile(
