@@ -67,7 +67,7 @@ Before making implementation changes, the receiver must check and record:
 
 - **Receiver**: `none — closed as superseded, see §6`
 - **Acceptance Decision**: `n/a — no receiver transfer ever occurred`
-- **Acceptance Timestamp**: `n/a`
+- **Acceptance Timestamp**: `None — no acceptance occurred; this handoff was closed as superseded on 2026-09-22 without a receiver transfer (see §6).`
 - **Receiver-Validated Revision**: `n/a`
 - **Validation Evidence**: `n/a — the workspace is many revisions past the 539de27 validated revision, so a revision-match check cannot pass (see §7)`
 - **Scope Changed During Acceptance**: `n/a`

@@ -327,7 +327,7 @@ Tailwind 4 · bcryptjs for password hashing · Stripe 19.1.0 · zod for validati
 | `src/middleware.ts` | Routing and the login wall |
 | `prisma/` | Schema, six migrations, and the seed script |
 | `src/generated/` | Prisma client, gitignored and rebuilt by `prisma generate` |
-| `docs/` | Live project state (`STATE.md`), ADRs, specs and post-mortems |
+| `docs/` | Live project state (`STATE.md`), session logs, ADRs, specs and post-mortems |
 
 ## Later ledger
 

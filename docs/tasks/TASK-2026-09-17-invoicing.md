@@ -6,7 +6,7 @@
 
 - **Record Type**: `Task Record`
 - **Task ID**: `TASK-2026-09-17-invoicing`
-- **PromptKit Adaptation Profile**: `none` (legacy dated ID preserved)
+- **PromptKit Adaptation Profile**: `none`
 - **Work Type**: `Code Work`
 - **Planning Record Link**: `[PLAN-invoicing](../specs/2026-09-17-spec-invoicing.md#PLAN-invoicing)`
 - **Planning Depth Reference**: `Full`
@@ -18,7 +18,7 @@
 - **Approval Boundary**: `Commits need explicit approval; no push without remote + approval; scope expansion needs Scope Change Record`
 - **Created**: `2026-09-17 UTC`
 
-> This Local Task Source is authoritative for Controlled Work. Planning/Assumption links are context only.
+> This Local Task Source is authoritative for Controlled Work. Planning/Assumption links are context only. The adaptation profile is `none` because this record keeps its legacy dated ID.
 
 ## 2. Objective and Boundaries
 
@@ -66,7 +66,7 @@
 - **Hard Checkpoint**: `At or before 90 minutes`
 - **Event-Driven Checkpoints**: `Milestone, task switch, scope expansion, handoff, compaction, or context drift`
 - **Stop Conditions**: `Missing approval/context, failed verification/CI/invariant, blocker, hard checkpoint, or developer stop`
-- **Host Timer Capability**: `No mechanical enforcement; manual checkpoint discipline`
+- **Host Timer Capability**: `No mechanical enforcement; manual checkpoint discipline — the host cannot enforce checkpoint timing or force termination, so the limitation is accepted and the hard stop is a manual agreement.`
 
 ## 5. State and Active Ownership
 
@@ -81,7 +81,11 @@
 
 | Previous State | New State | Timestamp | Actor | Reason | Supporting Evidence |
 |---|---|---|---|---|---|
-| `N/A` | `planned` | `2026-09-17 UTC` | `Assistant (pk:tasks)` | `Record created from PLAN-invoicing` | `docs/specs/2026-09-17-spec-invoicing.md` |
+| N/A | planned | `2026-09-17 UTC` | `Assistant (pk:tasks)` | `Record created from PLAN-invoicing` | `docs/specs/2026-09-17-spec-invoicing.md` |
+| planned | ready | 2026-09-17 UTC | Assistant (pk:tasks) | Objective, In Scope, AC, dependencies, risk and verification condition recorded | this record sections 2 to 4 |
+| ready | in_progress | 2026-09-17 UTC | Assistant | Implementation started — M2.1 client and invoice schema | this record; PLAN-invoicing |
+| in_progress | awaiting_review | 2026-09-17 UTC | Assistant | M2.1 to M2.4 complete; 30 pass / 0 fail; user acceptance outstanding | bun test 30 pass / 0 fail; build 8 of 8 routes, smoke 5 of 5 |
+| awaiting_review | completed | 2026-09-17 UTC | Assistant (M2 shipped) | User acceptance received; commits b2f9e1f + 1e3361f | user acceptance; AC-1 to AC-5 at Pass |
 
 ### Atomic Breakdown (1–4h each, dependency order)
 
@@ -103,15 +107,15 @@ Invariants locked: INV-01 balanced fail-closed, INV-02 integer cents, INV-03 app
   - `src/components/ClientForm.tsx`, `InvoiceForm.tsx`, `InvoiceList.tsx` - forms + status badges + pay/void
   - `src/app/clients/page.tsx`, `src/app/invoices/page.tsx`, `src/app/page.tsx` - pages + nav
 - **Verification Evidence**: `T1: prisma validate OK; migrate OK; generate OK; tsc clean; bun test 17/0. T2 2026-09-17: bun test 30/30 (13 new); tsc clean; eslint clean. T3: build 8/8 routes; dev smoke 5/5 200. T4 2026-09-17: grep clean (fixed float /100 display → formatCents in InvoiceList); full gate 30/30 + tsc + lint + build green`
-- **Scope Change Records**: `None`
+- **Scope Change Records**: `SCOPE-2026-09-17-invoicing-01` (retroactive — created 2026-09-23 for the boundary findings recorded there)
 - **Checkpoint Records**: `None`
 - **Handoff Records**: `None`
 - **Behavior IDs [Required when enabled]**: `N/A - TDD Enforcement Mode disabled`
 - **TDD Intent Register [Required when enabled]**: `N/A - TDD Enforcement Mode disabled`
 - **TDD Execution Evidence [Required when enabled]**: `N/A - TDD Enforcement Mode disabled`
 - **TDD Exception Verification [Required for Documentation, Configuration, or Research Work; Not applicable for Code Work]**: `N/A - Code Work`
-- **CI Evidence**: `N/A`
-- **Review Evidence**: `N/A`
+- **CI Evidence**: `None — this repository has no test workflow, so there is no CI result to link; the gate was run locally and is recorded under Verification Evidence.`
+- **Review Evidence**: `None — no review artifact was produced; acceptance was the owner's in-session review of the milestone, recorded under Acceptance Results.`
 - **Commit Evidence**: `b2f9e1f docs(plan): scope milestone 2 clients invoicing (spec + task + STATE); 1e3361f feat(invoicing): add clients and accrual invoicing with auto-posting (T1–T4)`
 - **Pull Request Evidence**: `N/A (no remote)`
 - **Release Evidence**: `N/A`
@@ -121,4 +125,4 @@ Invariants locked: INV-01 balanced fail-closed, INV-02 integer cents, INV-03 app
 - **Acceptance Results**: `AC-1 pass (tests); AC-2 pass (tests + TB balanced); AC-3 pass (tests); AC-4 pass (tests); AC-5 pass (build 8/8, smoke 5/5, user accepted 2026-09-17)`
 - **Changed-File Summary**: `prisma schema+migration; src/lib/invoicing.ts + tests; src/actions/invoicing.ts; ClientForm/InvoiceForm/InvoiceList; /clients + /invoices pages; home nav`
 - **Completion Exception**: `None`
-- **Completion Decision and Timestamp**: `N/A - planned`
+- **Completion Decision and Timestamp**: `Completed 2026-09-17 UTC; user acceptance of M2; commits b2f9e1f + 1e3361f`

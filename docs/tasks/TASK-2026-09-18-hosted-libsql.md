@@ -6,7 +6,7 @@
 
 - **Record Type**: `Task Record`
 - **Task ID**: `TASK-2026-09-18-hosted-libsql`
-- **PromptKit Adaptation Profile**: `none` (legacy dated ID preserved)
+- **PromptKit Adaptation Profile**: `none`
 - **Work Type**: `Code Work`
 - **Planning Record Link**: `[PLAN-hosted-libsql](../specs/2026-09-18-spec-hosted-libsql.md#PLAN-hosted-libsql)`
 - **Planning Depth Reference**: `Full`
@@ -71,6 +71,13 @@
 ## 4. Execution Policy
 
 - **TDD Mode**: `enabled` for `resolveDatasource` (pure function, unit-tested); smoke probes for hosted integration
+- **Mode**: `Gated Mode`
+- **Batch Authorization**: `N/A — one approved task, one execution scope`
+- **Soft Checkpoint**: `Around 60 minutes`
+- **Hard Checkpoint**: `At or before 90 minutes (L2 hard stop)`
+- **Event-Driven Checkpoints**: `Milestone, task switch, scope expansion, deploy, handoff, compaction, or context drift`
+- **Stop Conditions**: `Missing approval or credentials, failed verification (test, tsc, lint, build), failed invariant, blocker, hard checkpoint, or developer stop`
+- **Host Timer Capability**: `No mechanical enforcement observed — the host cannot enforce a checkpoint or force termination, so live timing is a limitation: checkpoints are manual and the hard stop is by agreement`
 - **Checkpoint Policy**: `Soft ~60m, hard ≤90m; event-driven on scope/deploy/handoff` (L2 hard stop)
 - **Commit Policy**: stage only the resolver, its tests, `src/lib/db.ts`, `.env.example`, and these two records; credentials are never staged
 - **Commit Evidence**: `2026-09-18 (three atomic commits, staged-index secret scan clean) — 666636a feat(db): resolve libSQL datasource from env for hosted databases; 9724b09 chore(lint): ignore local agent worktrees in eslint; 56c1cd4 docs(plan): record hosted libsql migration (spec + task + STATE)`. Staged-only, explicit paths, no `.env`/credentials in any commit; `.env.example` carries placeholders only.
@@ -88,3 +95,49 @@ This closes the deviation noted in AC-5: hosting `DATABASE_URL` in `.env` had si
 - **Evidence — script path**: a plain `bun <file>` (the `bun db:seed` / `bun prisma/seed.ts` shape) now resolves `file:./ledger.db`; `NODE_ENV=production bun <file>` still resolves the hosted URL, so production-mode tooling is unaffected.
 - **Docs**: `.env.example` + `README.md` now document the load order and both override files; the stale "`file:/tmp/ledger.db` on Vercel" guidance was removed.
 - **Not verified here**: the hosted deployment was not redeployed or re-tested this turn (no code change), and the local-mode switch was not exercised through a browser.
+
+## 6. State and Active Ownership
+
+- **Execution State**: `completed`
+- **Mapped `pk:tasks` Status**: `Done`
+- **Active Task Pointer**: `None`
+- **Start Time**: `2026-09-18 UTC`
+- **Current Actor**: `user (solo freelancer, account owner) / Assistant (implementation)`
+- **Next Action**: `None — Milestone 8 is complete: the hosted database is live and local dev/test stay on file:./ledger.db. Later work on the same database (credential rotation, a bounded 90-day expiry, and a CI expiry guard) is recorded in docs/STATE.md section 5 and section 9.`
+
+> This record keeps its legacy dated ID, which is why the adaptation profile is `none`.
+
+### Transition History
+
+| Previous State | New State | Timestamp | Actor | Reason | Supporting Evidence |
+|---|---|---|---|---|---|
+| N/A | planned | 2026-09-18 UTC | Assistant (pk:tasks) | Task Record created from PLAN-hosted-libsql | docs/specs/2026-09-18-spec-hosted-libsql.md#PLAN-hosted-libsql |
+| planned | ready | 2026-09-18 UTC | Assistant (pk:tasks) | Readiness complete: objective, scope boundary, risk and verification condition recorded | docs/specs/2026-09-18-spec-hosted-libsql.md#PLAN-hosted-libsql |
+| ready | in_progress | 2026-09-18 UTC | Assistant | Implementation began once the owner supplied the Turso database URL and token | src/lib/datasource.ts + src/lib/datasource.test.ts |
+| in_progress | awaiting_review | 2026-09-18 UTC | Assistant | AC-1 to AC-5 evidenced, including hosted Production and Preview verification | bun test 75 pass / 0 fail; hosted login POST 200 with the session read back by a separate process |
+| awaiting_review | completed | 2026-09-18 UTC | Assistant | Completion recorded with all five acceptance criteria at Pass; the AC-5 deviation closed by section 5 | Commits 666636a, 9724b09, 56c1cd4; section 5 evidence |
+
+## 7. Evidence and Completion Gate
+
+- **Changed Files**:
+  - `src/lib/datasource.ts` — new `resolveDatasource(env)` with the local/remote classification (666636a)
+  - `src/lib/datasource.test.ts` — 13 resolver tests: aliases, precedence, blank values, fail-closed throw, protocol classification (666636a)
+  - `src/lib/db.ts` — `PrismaLibSql(resolveDatasource())`, removing the `/tmp` copy workaround (666636a)
+  - `.env.example` — `DATABASE_AUTH_TOKEN` / `TURSO_AUTH_TOKEN` and the `libsql://` URL form (666636a)
+  - `eslint.config.mjs` — local agent-worktree paths added to `globalIgnores` (9724b09, outside the recorded In Scope list)
+  - `docs/specs/2026-09-18-spec-hosted-libsql.md`, `docs/tasks/TASK-2026-09-18-hosted-libsql.md`, `docs/STATE.md` — planning and state records (56c1cd4)
+- **Scope Change Records**: `SCOPE-2026-09-18-hosted-libsql-01` (retroactive — created 2026-09-23 to record the two unplanned paths below)
+- **Scope Deviation Note**: two changes fell outside the recorded In Scope list and carry no Scope Change Record — `eslint.config.mjs` (9724b09) and the three documentation files (56c1cd4). Both were incidental to the migration; they are recorded in `docs/tasks/SCOPE-2026-09-18-hosted-libsql-01.md` rather than left unmentioned.
+- **Checkpoint Records**: `None for this task — the 2026-09-18 checkpoint on file belongs to TASK-2026-09-17-core-ledger`
+- **Handoff Records**: `None`
+- **Verification Evidence**: `2026-09-18 — resolver: bun test 70 pass / 0 fail (8 new tests), then 75 pass / 0 fail (13 resolver tests: default local, file: without token, stray token dropped, libsql:// with DATABASE_AUTH_TOKEN, TURSO_AUTH_TOKEN alias, precedence, remote-without-token throws, protocol classification including file:./http-cache.db staying local); bunx tsc --noEmit exit 0; bun run lint exit 0; bun run build exit 0 (13 routes). Hosted: six migrations applied through @libsql/client, seed 15 accounts / 2 users, Production and Preview login POST 200 with a 64-hex session cookie, that session read back from the hosted DB by a separate process and accepted by the other environment, unauthed / 307 to /login, /login 200, all 8 authed routes 200. Local: bun dev bound to file:./ledger.db, a local-only session accepted across five routes, and a signed Stripe webhook write landing locally with 0 hosted rows. Later re-run 2026-09-23 — bun test 82 pass / 0 fail (170 expect() calls, 8 files), tsc exit 0, eslint exit 0, build exit 0 in 45s with the hosted DB counts unchanged across the build.`
+- **CI Evidence**: `None — this repository has no test workflow; verification is the local gate listed above. (The 2026-09-23 database-token expiry guard is a separate workflow and does not cover this task's code.)`
+- **Review Evidence**: `Owner review of the three commits (666636a, 9724b09, 56c1cd4) together with the five AC results in section 3; no separate review artifact exists.`
+- **Pull Request Evidence**: `None — no pull-request workflow; the three commits were pushed directly to main.`
+- **Release Evidence**: `None — no tagged release; production deploys by pushing to main, where Vercel builds and aliases Production.`
+- **Blocker and Resume Condition**: `None — the hosted database is live and local dev/test are isolated on file:./ledger.db. Historical resume items are closed: the isolation follow-up was committed (398b24e), the credential rotation it referenced was completed 2026-09-23, and the Vercel Development DATABASE_URL was measured on 2026-09-23 and deliberately kept, because it holds file:./ledger.db and the warning that it was stale was wrong. Standing caveat: Vercel Preview sits behind deployment-protection SSO, so Preview reachability has to be checked through a protection bypass.`
+- **Completion State**: `completed`
+- **Acceptance Results**: `AC-1 Pass; AC-2 Pass; AC-3 Pass; AC-4 Pass; AC-5 Pass — with the AC-5 deviation (local runs pointed at the hosted database) closed by section 5 and the follow-up accepted by the owner.`
+- **Changed-File Summary**: `Product: src/lib/datasource.ts, src/lib/datasource.test.ts, src/lib/db.ts, .env.example (666636a); eslint.config.mjs (9724b09). Docs: docs/specs/2026-09-18-spec-hosted-libsql.md, docs/tasks/TASK-2026-09-18-hosted-libsql.md, docs/STATE.md (56c1cd4, and 398b24e for the isolation follow-up). Outside the repository: Vercel DATABASE_URL + DATABASE_AUTH_TOKEN for Production and Preview; the hosted ledgercraft database carries the six migrations and the seeded 15 accounts / 2 users. 398b24e is the follow-up that pinned local dev and test to file:./ledger.db through .env.development.local and .env.test.local; the local database file stays untracked and *.db is ignored.`
+- **Completion Exception**: `None — the AC-5 deviation was closed inside section 5 rather than carried as an exception.`
+- **Completion Decision and Timestamp**: `Completed 2026-09-18 UTC by Assistant; all five acceptance criteria at Pass with the evidence in sections 3 and 5; product commits 666636a + 9724b09 + 56c1cd4, follow-up 398b24e.`

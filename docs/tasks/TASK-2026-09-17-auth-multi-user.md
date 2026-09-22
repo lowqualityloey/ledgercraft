@@ -6,7 +6,7 @@
 
 - **Record Type**: `Task Record`
 - **Task ID**: `TASK-2026-09-17-auth-multi-user`
-- **PromptKit Adaptation Profile**: `none` (legacy dated ID preserved)
+- **PromptKit Adaptation Profile**: `none`
 - **Work Type**: `Code Work`
 - **Planning Record Link**: `[PLAN-auth-multi-user](../specs/2026-09-17-spec-auth-multi-user.md#PLAN-auth-multi-user)`
 - **Planning Depth Reference**: `Full`
@@ -18,7 +18,7 @@
 - **Approval Boundary**: `Commits need explicit approval; no push without remote + approval; scope expansion needs Scope Change Record`
 - **Created**: `2026-09-17 UTC`
 
-> This Local Task Source is authoritative for Controlled Work. Planning/Assumption links are context only.
+> This Local Task Source is authoritative for Controlled Work. Planning/Assumption links are context only. The adaptation profile is `none` because this record keeps its legacy dated ID.
 
 ## 2. Objective and Boundaries
 
@@ -76,7 +76,7 @@
 - **Hard Checkpoint**: `At or before 90 minutes`
 - **Event-Driven Checkpoints**: `Milestone, task switch, scope expansion, handoff, compaction, or context drift`
 - **Stop Conditions**: `Missing approval/context, failed verification/CI/invariant, blocker, hard checkpoint, or developer stop`
-- **Host Timer Capability**: `No mechanical enforcement; manual checkpoint discipline`
+- **Host Timer Capability**: `No mechanical enforcement; manual checkpoint discipline — the host cannot enforce checkpoint timing or force termination, so the limitation is accepted and the hard stop is a manual agreement.`
 
 ## 5. State and Active Ownership
 
@@ -91,10 +91,10 @@
 
 | Previous State | New State | Timestamp | Actor | Reason | Supporting Evidence |
 |---|---|---|---|---|---|
-| `N/A` | `planned` | `2026-09-17 UTC` | `Assistant (pk:tasks)` | `Record created from PLAN-auth-multi-user` | `docs/specs/2026-09-17-spec-auth-multi-user.md` |
-| `planned` | `ready` | `2026-09-17 UTC` | `Assistant (pk:tasks)` | `Objective, scope, AC, dependencies, risk, verification, invariants complete — awaiting in_progress approval` | `this record §2–§4` |
-| `ready` | `in_progress` | `2026-09-17 UTC` | `Assistant (M5.1)` | `User approved in_progress — begin M5.1 Schema + seed + domain` | `user reply "1"` |
-| `in_progress` | `completed` | `2026-09-17 UTC` | `Assistant (M5 shipped)` | `M5.1–M5.4 + user acceptance — 53/53 green` | `user reply "accepted"` |
+| N/A | planned | `2026-09-17 UTC` | `Assistant (pk:tasks)` | `Record created from PLAN-auth-multi-user` | `docs/specs/2026-09-17-spec-auth-multi-user.md` |
+| planned | ready | `2026-09-17 UTC` | `Assistant (pk:tasks)` | `Objective, scope, AC, dependencies, risk, verification, invariants complete — awaiting in_progress approval` | `this record §2–§4` |
+| ready | in_progress | `2026-09-17 UTC` | `Assistant (M5.1)` | `User approved in_progress — begin M5.1 Schema + seed + domain` | `user reply "1"` |
+| in_progress | completed | `2026-09-17 UTC` | `Assistant (M5 shipped)` | `M5.1–M5.4 + user acceptance — 53/53 green` | `user reply "accepted"` |
 
 ### Atomic Breakdown (1–4h each, dependency order)
 
@@ -121,15 +121,15 @@ Invariants locked: INV-01 balanced fail-closed, INV-02 integer cents, INV-03 app
   - `prisma/seed.ts` - idempotent owner+accountant upsert
   - `.env.example` - AUTH_SECRET + DATABASE_URL placeholders
 - **Verification Evidence**: `2026-09-17: bun test 53/53 + tsc clean + lint clean + build 11 routes Proxy + curl matrix unauthed 307×7 authed 200×3 receipt 307/200 post-logout 307 + grep requireSession 20`
-- **Scope Change Records**: `None`
+- **Scope Change Records**: `SCOPE-2026-09-17-auth-multi-user-01` (retroactive — created 2026-09-23 for the boundary findings recorded there)
 - **Checkpoint Records**: `None`
 - **Handoff Records**: `None`
 - **Behavior IDs [Required when enabled]**: `N/A - TDD Enforcement Mode disabled`
 - **TDD Intent Register [Required when enabled]**: `N/A - TDD Enforcement Mode disabled`
 - **TDD Execution Evidence [Required when enabled]**: `N/A - TDD Enforcement Mode disabled`
 - **TDD Exception Verification [Required for Documentation, Configuration, or Research Work; Not applicable for Code Work]**: `N/A - Code Work`
-- **CI Evidence**: `N/A`
-- **Review Evidence**: `N/A`
+- **CI Evidence**: `None — this repository has no test workflow, so there is no CI result to link; the gate was run locally and is recorded under Verification Evidence.`
+- **Review Evidence**: `None — no review artifact was produced; acceptance was the owner's in-session review of the milestone, recorded under Acceptance Results.`
 - **Commit Evidence**: `cde43b5 feat(auth): M5.1 schema + seed + domain; df3b5de feat(auth): M5.2-M5.4 gate + login UI + wiring`
 - **Pull Request Evidence**: `N/A (no remote)`
 - **Release Evidence**: `N/A`

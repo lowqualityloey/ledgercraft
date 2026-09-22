@@ -6,7 +6,7 @@
 
 - **Record Type**: `Task Record`
 - **Task ID**: `TASK-2026-09-17-csv-import`
-- **PromptKit Adaptation Profile**: `none` (legacy dated ID preserved)
+- **PromptKit Adaptation Profile**: `none`
 - **Work Type**: `Code Work`
 - **Planning Record Link**: `[PLAN-csv-import](../specs/2026-09-17-spec-csv-import.md#PLAN-csv-import)`
 - **Planning Depth Reference**: `Full`
@@ -18,7 +18,7 @@
 - **Approval Boundary**: `Commits need explicit approval; no push without remote + approval; scope expansion needs Scope Change Record`
 - **Created**: `2026-09-17 UTC`
 
-> This Local Task Source is authoritative for Controlled Work. Planning/Assumption links are context only.
+> This Local Task Source is authoritative for Controlled Work. Planning/Assumption links are context only. The adaptation profile is `none` because this record keeps its legacy dated ID.
 
 ## 2. Objective and Boundaries
 
@@ -66,7 +66,7 @@
 - **Hard Checkpoint**: `At or before 90 minutes`
 - **Event-Driven Checkpoints**: `Milestone, task switch, scope expansion, handoff, compaction, or context drift`
 - **Stop Conditions**: `Missing approval/context, failed verification/CI/invariant, blocker, hard checkpoint, or developer stop`
-- **Host Timer Capability**: `No mechanical enforcement; manual checkpoint discipline`
+- **Host Timer Capability**: `No mechanical enforcement; manual checkpoint discipline — the host cannot enforce checkpoint timing or force termination, so the limitation is accepted and the hard stop is a manual agreement.`
 
 ## 5. State and Active Ownership
 
@@ -81,7 +81,11 @@
 
 | Previous State | New State | Timestamp | Actor | Reason | Supporting Evidence |
 |---|---|---|---|---|---|
-| `N/A` | `planned` | `2026-09-17 UTC` | `Assistant (pk:tasks)` | `Record created from PLAN-csv-import` | `docs/specs/2026-09-17-spec-csv-import.md` |
+| N/A | planned | `2026-09-17 UTC` | `Assistant (pk:tasks)` | `Record created from PLAN-csv-import` | `docs/specs/2026-09-17-spec-csv-import.md` |
+| planned | ready | 2026-09-17 UTC | Assistant (pk:tasks) | Objective, In Scope, AC, dependencies, risk and verification condition recorded | this record sections 2 to 4 |
+| ready | in_progress | 2026-09-17 UTC | Assistant | Implementation started — M3.1 ImportBatch schema | this record; PLAN-csv-import |
+| in_progress | awaiting_review | 2026-09-17 UTC | Assistant | M3.1 to M3.4 complete; 44 pass / 0 fail; user acceptance outstanding | bun test 44 pass / 0 fail; build 9 of 9 routes, smoke 7 of 7 |
+| awaiting_review | completed | 2026-09-17 UTC | Assistant (M3 shipped) | User acceptance received; commits bcf62fa + 539de27 | user acceptance; AC-1 to AC-5 at Pass |
 
 ### Atomic Breakdown (1–4h each, dependency order)
 
@@ -107,8 +111,8 @@ Invariants locked: INV-01 balanced fail-closed, INV-02 integer cents, INV-03 app
 - **TDD Intent Register [Required when enabled]**: `N/A - TDD Enforcement Mode disabled`
 - **TDD Execution Evidence [Required when enabled]**: `N/A - TDD Enforcement Mode disabled`
 - **TDD Exception Verification [Required for Documentation, Configuration, or Research Work; Not applicable for Code Work]**: `N/A - Code Work`
-- **CI Evidence**: `N/A`
-- **Review Evidence**: `N/A`
+- **CI Evidence**: `None — this repository has no test workflow, so there is no CI result to link; the gate was run locally and is recorded under Verification Evidence.`
+- **Review Evidence**: `None — no review artifact was produced; acceptance was the owner's in-session review of the milestone, recorded under Acceptance Results.`
 - **Commit Evidence**: `bcf62fa docs(plan): scope milestone 3 bank csv import (spec + task + STATE); 539de27 feat(imports): add bank csv import with drafts and dedup (M3.1–M3.4)`
 - **Pull Request Evidence**: `N/A (no remote)`
 - **Release Evidence**: `N/A`
@@ -118,4 +122,4 @@ Invariants locked: INV-01 balanced fail-closed, INV-02 integer cents, INV-03 app
 - **Acceptance Results**: `AC-1 pass (tests); AC-2 pass (tests); AC-3 pass (tests + TB balanced); AC-4 pass (tests); AC-5 pass (build 9/9, smoke 7/7, user accepted 2026-09-17)`
 - **Changed-File Summary**: `prisma schema+migration; src/lib/csvImport.ts + tests; src/actions/imports.ts; ImportUploader; /imports page; home nav`
 - **Completion Exception**: `None`
-- **Completion Decision and Timestamp**: `N/A - planned`
+- **Completion Decision and Timestamp**: `Completed 2026-09-17 UTC; user acceptance of M3; commits bcf62fa + 539de27`
