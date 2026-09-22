@@ -1,0 +1,26 @@
+# Checkpoint Record 01: TASK-2026-09-18-hosted-libsql
+
+- **Record Type**: `Checkpoint Record`
+- **Checkpoint ID**: `CHECKPOINT-2026-09-23-hosted-libsql-01`
+- **Task ID**: `TASK-2026-09-18-hosted-libsql`
+- **Specification**: `docs/specs/2026-09-18-spec-hosted-libsql.md` (`PLAN-hosted-libsql`, Full)
+- **Created**: `2026-09-23 UTC`
+- **Checkpoint Type**: `Event-driven session checkpoint (project close-out)`
+- **Execution State**: `completed`
+- **Objective**: The ledger moved off the per-instance `file:/tmp/ledger.db` copy onto a hosted Turso libSQL database, with local dev and test deliberately isolated on `file:./ledger.db` so no local run can write to production.
+- **Completed Work**: Task closed 2026-09-18 (all five acceptance criteria Pass; the AC-5 local-isolation deviation closed by the record's section 5). At project close on 2026-09-23 the wider state was certified rather than assumed: full gate re-run green (`bun test` 82 pass / 0 fail, 170 `expect()` calls across 8 files, 4.90s; `tsc --noEmit` exit 0; `eslint` exit 0; `bun run build` exit 0 with 13 routes), the execution-control validator clean in default and strict mode, the token-expiry guard green locally and on a GitHub runner, and Production probed live. Milestone 8 was added to the STATE roadmap, which had never listed it despite it having shipped.
+- **Remaining Work**: None on this task. The project's remaining items are operational rather than product work — the database token deadline (`2026-12-21T13:07Z`), the Preview-behind-SSO verification caveat, one unmerged obsolete branch, and a foreign worktree. All are listed in `docs/releases/2026-09-23-project-closeout.md`.
+- **Changed Files**:
+  - `src/lib/datasource.ts`, `src/lib/datasource.test.ts`, `src/lib/db.ts`, `.env.example` — the resolver and its tests, in `666636a`
+  - `.env.example`, `README.md`, `docs/STATE.md`, this task record — the local-isolation follow-up, in `b1ddc0f`
+  - `docs/releases/2026-09-23-project-closeout.md`, `docs/STATE.md`, `docs/tasks/*` — the close-out records, in the close-out commit (`7a60060` is the preceding records commit)
+- **Branch / Revision**: `main @ 7a60060` (close-out records; this task's own final commit is `b1ddc0f`, verified against git history)
+- **Locked Decisions and Invariants**: INV-01 balanced fail-closed, INV-02 integer cents, INV-03 append-only with reversals, INV-04 shared ledger behind auth. Added by this task's work: Prisma's libSQL adapter with `resolveDatasource()` reading `DATABASE_URL` (never a hard-coded path); local dev and test pinned by `.env.development.local` / `.env.test.local`, which load *after* `.env.local`; `prisma migrate` cannot reach `libsql://` (`P1013`), so schema changes go through `@libsql/client`.
+- **Verification Evidence**: `bun test` 82 pass / 0 fail, 170 `expect()` calls, 8 files, 4.90s; `tsc --noEmit` exit 0; `eslint` exit 0; `bun run build` exit 0, 13 routes, `/invoices/[id]` still dynamic; validator `VALID` (default and strict); token-expiry guard exit 0 (`89.9 days remaining, threshold 14d`); Production `/login` 200 with `/` and `/journal` redirecting to the login wall (probed with redirects disabled). Earlier task-specific evidence — hosted round-trips, local-only write and test paths, the isolation probes — is recorded in the task record's sections 3 and 5.
+- **CI Evidence**: `Partial — .github/workflows/db-token-expiry.yml runs daily and passed on the runner at 7a60060, reading the expiry from STATE section 7. No test or build pipeline exists in this repository, so every test/build gate above is a local run.`
+- **Blockers**: None
+- **Scope Changes**: `docs/tasks/SCOPE-2026-09-18-hosted-libsql-01.md` records the two files (`eslint.config.mjs` and the docs commit) that shipped outside the recorded In Scope list, accepted retroactively rather than approved.
+- **Next Action**: None — the project is closed (STATE overall status `COMPLETED`). Any further work starts from the close-out record.
+- **Resume Condition**: None. Two operational items outlive the close and need no session context: rotate the database token before `2026-12-21T13:07Z` (the CI guard fails loudly inside 14 days), and check Preview through a protection bypass, since Vercel does not push env changes to it.
+- **Recorded By**: Assistant (`pk:checkpoint`), 2026-09-23 UTC
+- **Policy**: Soft ~60 min / hard ~90 min checkpoints observed manually; the host provides no mechanical timer or forced termination, so timing is a manual discipline rather than an enforced stop.
