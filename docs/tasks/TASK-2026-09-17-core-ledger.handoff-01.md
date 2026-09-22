@@ -30,7 +30,7 @@
 - **Changed Files**:
   - `Committed: package.json, bun.lock, configs, prisma/*, src/*, public/*, PROMPTKIT.md, docs/specs/*, docs/tasks/TASK-2026-09-17-core-ledger.md, docs/STATE.md (as of 6dc9529)`
   - `Uncommitted after 6dc9529: docs/STATE.md (checkpoint sync), docs/tasks/*.checkpoint-01.md, docs/tasks/*.handoff-01.md (new), plus pre-existing init dirt untouched`
-  - `Untracked init dirt (not ours, never staged): .clinerules/, .github/, .gitmodules, .opencode/, .promptkit/, AGENTS.md`
+  - `Untracked init dirt (not ours, never staged): .clinerules/, .github/, .gitmodules, .opencode/, .promptkit/, AGENTS.md` — **CORRECTED 2026-09-22, see §7**: all six paths are now tracked.
 - **Task Record**: `docs/tasks/TASK-2026-09-17-core-ledger.md`
 - **Related Scope Changes**: `None`
 - **Related Checkpoints**: `docs/tasks/TASK-2026-09-17-core-ledger.checkpoint-01.md`
@@ -79,3 +79,13 @@ Before making implementation changes, the receiver must check and record:
 - **Handoff Closed By**: `[pending]`
 - **Closed Timestamp**: `[pending]`
 - **Next Action**: `Define Milestone 2 scope via pk:plan`
+
+## 7. Post-Closeout Corrections
+
+> Added `2026-09-22`, after this handoff was written. Sections 1–6 remain the original point-in-time snapshot at revision `6dc9529`; the only edits to them are the inline `CORRECTED` markers that point here.
+
+- **§3 untracked-file inventory is obsolete.** No path it lists is untracked any longer:
+  - `.promptkit/` + `.gitmodules` — registered as a tracked git submodule (gitlink `e539627`, engine `v1.8.0-92-ge539627`) in `0214df8`
+  - `.clinerules/`, `.github/`, `.opencode/`, `AGENTS.md` — committed in `e4f198c`, which also added `GEMINI.md`, a fourth identical host directive copy this inventory never mentioned
+  - `PROMPTKIT.md` also moved in `2e12128`: the declared tracker is now `tracking: local` + `projection: github`
+- **Why this matters to a receiver**: the `.promptkit/` engine is no longer ambient local state to ignore. It is a pinned submodule, so `.promptkit/protocols/` and `.promptkit/workflows/` are authoritative and should be read from disk rather than recalled from an earlier session.
