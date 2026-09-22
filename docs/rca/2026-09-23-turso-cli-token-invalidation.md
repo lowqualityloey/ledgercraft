@@ -122,8 +122,15 @@ verify 6s, Vercel wiring 7s, redeploy `Ready` 52s), with `/login` static through
 | 6 | If the no-op is ever hit again, re-run the §4 reproduction on throwaway infra before trusting `Success!` | Anyone | Open |
 
 Item 5 is the real lesson: because rotation is the *only* revocation mechanism for SQL tokens, a token
-minted with the default `-e never` that outlives its rotation plan has no backstop. Prefer a bounded
-expiry so an unnoticed failure self-heals.
+minted with the default `-e never` that outlives its rotation plan has no backstop. A bounded expiry
+restores that backstop.
+
+**Be precise about what expiry does and does not do.** It does not heal anything and it does not
+re-verify anything: it *self-destructs*, capping how long any straggler credential can remain valid
+and forcing a rotation to actually happen on a schedule. The cost is symmetrical — if nobody rotates
+in time, production fails at expiry, and this app has no alerting that would announce it first. So
+bounded expiry trades an invisible unbounded risk for a visible scheduled one; it is a win only if the
+expiry date is recorded where a future session will see it (`docs/STATE.md` §5).
 
 ---
 
