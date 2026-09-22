@@ -35,11 +35,15 @@ export function middleware(request: NextRequest) {
   const authed = Boolean(token);
 
   if (isPublicPath(pathname)) {
-    if (authed && pathname === "/login") {
-      const next = request.nextUrl.searchParams.get("next");
-      const dest = next && next.startsWith("/") ? next : "/";
-      return NextResponse.redirect(new URL(dest, request.url));
-    }
+    // Deliberately NO "already signed in -> redirect away from /login" branch here.
+    // The middleware can only see that a cookie is *present*, never whether the
+    // session behind it is still valid (no database access on the edge). Bouncing
+    // on presence alone therefore contradicts the login page's own validated check
+    // and the two ping-pong forever: /login -> / -> /login -> ... which the browser
+    // aborts as ERR_TOO_MANY_REDIRECTS. A stale cookie (expired session, or a row
+    // removed) left users unable to reach the sign-in form at all.
+    // `src/app/login/page.tsx` performs this redirect *after* validating the
+    // session, so it is the single authoritative check.
     return NextResponse.next();
   }
 
