@@ -40,6 +40,52 @@ These are the rules the code defends, and each one is covered by tests:
 - **Posting is idempotent.** Repeating a request with the same key returns the
   original entry instead of creating a second one.
 
+## How a journal entry gets posted
+
+The layers are kept deliberately separate: the form never talks to the database,
+and the domain code never talks to the UI. Here is what happens when you post a
+single journal entry.
+
+1. **The form** (`src/components/JournalForm.tsx`) holds the entry in local state
+   — a date, a description, and at least two lines, each with an account and a
+   debit *or* a credit. It converts what you type into cents using the same
+   helpers the server uses (`src/lib/money.ts`), so the
+   `Dr 1,500.00 = Cr 1,500.00 ✓ balanced` readout is not an approximation, and the
+   submit button stays disabled until the entry balances.
+2. **The server action** (`src/actions/ledger.ts`, `createJournal`) is the server
+   entry point. It calls `requireSession()` first, so an unauthenticated request
+   cannot reach the ledger, then converts the typed dollars to integer cents,
+   attaches a fresh idempotency key, and passes the result to the domain layer.
+   Errors come back as a message on the form rather than a failed request.
+3. **The domain layer** (`src/lib/ledger.ts`, `postJournal`) is where the rules
+   live — its own comment calls it the place for "all balance, atomicity, and
+   reversal rules". It validates the input against `PostJournalSchema`
+   (`src/lib/journal.ts`) *before* opening a transaction, so an unbalanced entry
+   writes nothing at all, and it then confirms every referenced account exists.
+4. **The write** happens inside a single `$transaction`: the entry and all of its
+   lines are created together, so a partially written entry cannot happen. If the
+   same idempotency key arrives twice, the unique constraint rejects the second
+   attempt and the original entry is returned instead of a duplicate.
+5. **The database** is reached through one Prisma client (`src/lib/db.ts`) built
+   on the libSQL adapter, which resolves to the local SQLite file or the hosted
+   database depending on the environment (see the next section).
+
+| Layer | File | Responsibility |
+| :--- | :--- | :--- |
+| Form | `src/components/JournalForm.tsx` | Collect input and show a live balance; never decide correctness |
+| Server action | `src/actions/ledger.ts` | Auth, unit conversion, idempotency key, error shaping |
+| Domain | `src/lib/ledger.ts`, `src/lib/journal.ts` | Validation, balance, atomicity, reversal |
+| Data access | `src/lib/db.ts`, `src/lib/datasource.ts` | One client, local or hosted |
+
+Three consequences worth knowing. The balance rule is enforced **twice** — in the
+browser for immediate feedback, and on the server as the authority — so disabling
+JavaScript or hand-crafting a request cannot post an unbalanced entry. Corrections
+follow the same path: `reverseEntry` appends an inverted, linked copy and refuses
+to reverse the same entry twice, so the original row is never edited or deleted.
+And the trial balance and profit & loss reports are **computed from the posted
+lines** each time they are read; there are no stored running totals, so a report
+cannot drift out of step with the ledger.
+
 ## Run it locally
 
 You need [Bun](https://bun.sh) installed. From the project root:
