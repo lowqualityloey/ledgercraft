@@ -92,8 +92,14 @@ happen, and notes it was created on 2026-09-23.
    **Resolved 2026-09-23**: both were promoted to full Checkpoint Records with their own
    `Checkpoint ID`, type, resume condition and recorded-by fields, so `validate-execution-control.sh`
    now reports `VALID` in default *and* strict mode (17 records, up from 15).
-2. **§3A's `Current Revision`** is `56c1cd4` while that task's newest commit is `398b24e`.
-   The check is inert (the Task Record carries no revision field); adding one would activate
-   it and immediately conflict.
+2. ~~**§3A's `Current Revision`** is `56c1cd4` while that task's newest commit is `398b24e`.~~
+   **Resolved 2026-09-23**, with a correction to the claim above: that task's *last* commit is not
+   `398b24e` but `b1ddc0f` (*docs(env): record local dev/test isolation and post-rewrite SHAs*).
+   `398b24e` is the earlier completion commit, which re-queued the isolation item rather than
+   performing it; the docs had credited the follow-up to it. §3A now carries `b1ddc0f`, and the
+   Task Record gained `Branch / Revision: main @ b1ddc0f` — which turns the previously inert
+   `REVISION_MISMATCH` check into an active, passing one. Verified non-vacuously: with the record
+   in a throwaway docs root set to `56c1cd4`, the validator emits `REVISION_MISMATCH
+   TASK-2026-09-18-hosted-libsql`, so the agreement is real rather than an unchecked field.
 3. **A second worktree** (`.kilo/worktrees/stone-squash`, excluded via `.git/info/exclude`)
    still holds the pre-cleanup copies of these records. It will need a merge or rebase.
