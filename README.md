@@ -120,6 +120,12 @@ once**, and it cannot hold a session.
    Receivable**, both for the base total — and flips the invoice to `PAID` with
    `paymentEntryId` pointing at that entry. A payment is therefore an ordinary
    journal entry, indistinguishable in the reports from one typed by hand.
+6. **The buyer gets an acknowledgement.** Stripe sends them back to the invoice
+   with `?paid=1`, which is what `src/components/PaymentConfirmation.tsx` renders
+   from. The parameter is treated as a hint only — the banner is driven by the
+   stored status, so it says "Confirming your payment" and re-checks a few times
+   while the webhook is in flight, and claims the payment only once the invoice
+   really is `PAID`.
 
 | Layer | File | Responsibility |
 | :--- | :--- | :--- |
@@ -128,16 +134,16 @@ once**, and it cannot hold a session.
 | Stripe client | `src/lib/stripe.ts` | Build the session; verify the signature |
 | Webhook | `src/app/api/stripe/webhook/route.ts` | Authenticate by signature, dedupe, dispatch |
 | Domain | `src/lib/invoicing.ts` (`markPaid`) | Post the payment entry and set `PAID` |
+| Confirmation | `src/components/PaymentConfirmation.tsx` | Acknowledge the payment; never assert one that is not recorded |
 
-Three consequences worth knowing. The `success_url` is **decorative**: nothing in
-the app reads its `?paid=1`, and an invoice becomes paid only when the signed
-webhook arrives — so editing the URL in the address bar achieves nothing. (One
-side effect of that: there is no post-payment confirmation screen, because the
-buyer simply lands back on the invoice, which the webhook has usually already
-flipped to `PAID`.) Only an `UNPAID` invoice can be paid, so a `VOID` or `DRAFT`
-invoice cannot be resurrected by a payment. And event types the app does not
-handle are recorded and acknowledged with `200`, which is deliberate: returning
-an error would make Stripe retry forever.
+Three consequences worth knowing. `?paid=1` decides **only what the buyer sees**,
+never whether money arrived: an invoice becomes paid solely through the signed
+webhook, so editing the URL in the address bar can at most summon a banner that
+reads "Confirming your payment" while the status is still `UNPAID`. Only an
+`UNPAID` invoice can be paid, so a `VOID` or `DRAFT` invoice cannot be resurrected
+by a payment. And event types the app does not handle are recorded and
+acknowledged with `200`, which is deliberate: returning an error would make Stripe
+retry forever.
 
 ## Run it locally
 
