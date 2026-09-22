@@ -88,11 +88,10 @@ happen, and notes it was created on 2026-09-23.
 
 ## 6. Known remaining items (not part of this cleanup)
 
-1. **Strict mode reports 2**: two 2026-09-17 checkpoint snapshots
-   (`TASK-2026-09-17-{core-ledger,csv-import}.checkpoint-01.md`) carry no `Record Type`, so
-   strict validation flags them as unrecognised records. Promoting them to full Checkpoint
-   Records means adding ~8 more labelled fields, or moving them to an archive — a decision,
-   not a fix.
+1. ~~**Strict mode reports 2**: two 2026-09-17 checkpoint snapshots carry no `Record Type`.~~
+   **Resolved 2026-09-23**: both were promoted to full Checkpoint Records with their own
+   `Checkpoint ID`, type, resume condition and recorded-by fields, so `validate-execution-control.sh`
+   now reports `VALID` in default *and* strict mode (17 records, up from 15).
 2. **§3A's `Current Revision`** is `56c1cd4` while that task's newest commit is `398b24e`.
    The check is inert (the Task Record carries no revision field); adding one would activate
    it and immediately conflict.

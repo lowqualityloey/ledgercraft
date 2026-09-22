@@ -1,14 +1,26 @@
 # Checkpoint Record 01: TASK-2026-09-17-csv-import
 
+- **Record Type**: `Checkpoint Record`
+- **Checkpoint ID**: `CHECKPOINT-2026-09-17-csv-import-01`
 - **Task ID**: `TASK-2026-09-17-csv-import`
 - **Specification**: `docs/specs/2026-09-17-spec-csv-import.md` (`PLAN-csv-import`, Full)
-- **Execution State**: `completed` (all AC-1..AC-5 complete, user acceptance 2026-09-17)
-- **Objective**: Bank CSV import — upload, draft review, post-selected balanced journals (Cash 1000 leg + chosen offset), sha256 dedup + per-row idempotency.
-- **Completed**: PLAN-csv-import + Task Record (`bcf62fa`); M3.1 `ImportBatch` migration; M3.2 `csvImport.ts` + 14 tests (incl. empty debit/credit → 0 fix); M3.3 `/imports` UI + Actions (9/9 build); M3.4 grep + full gate; stale `:3000` replaced per approval, smoke 7/7.
-- **Remaining**: None on this task. Manual acceptance done by user (real bank CSV → post → TB balances → re-upload rejected).
-- **Changed files**: See Handoff Record §3. Branch `main` at `539de27` (plan `bcf62fa` + build `539de27`).
-- **Decisions / invariants**: INV-01/02/03/04 hold; drafts unpersisted (deterministic rebuild); hand-rolled parser, no new deps; per-row keys `imp-{hash8}:{index}`; cash leg fixed 1000 (ASSUMPTION-csv-import-002 validated by acceptance).
-- **Verification**: `bun test` 44 pass / 0 fail; `tsc --noEmit` green; `eslint` green; `bun run build` 9/9 routes; dev smoke 7/7 routes 200; invariant grep clean. CI: N/A (no pipeline).
-- **Blockers**: None. **Scope changes**: None (PDF/auth/FX/Stripe stay in Later ledger).
-- **Next action**: Define Milestone 4 scope (PDF receipts suggested) via `pk:plan`, or stop.
-- **Policy**: Soft ~60min / hard ~90min checkpoints observed manually; host provides no mechanical timer (`POLICY_LIMITATION`).
+- **Created**: `2026-09-17 UTC`
+- **Checkpoint Type**: `Event-driven milestone checkpoint (Milestone 3 close)`
+- **Execution State**: `completed`
+- **Objective**: Bank CSV import — upload, draft review, post selected balanced journals (Cash 1000 leg plus the chosen offset account), sha256 dedup and per-row idempotency.
+- **Completed Work**: PLAN-csv-import + Task Record (`bcf62fa`); M3.1 `ImportBatch` migration; M3.2 `csvImport.ts` + 14 tests (including the empty debit/credit → 0 fix); M3.3 `/imports` UI + actions (9 of 9 build); M3.4 invariant grep + full gate, with the stale `:3000` process replaced per approval and smoke passing 7 of 7. All of AC-1 to AC-5 complete; user manual acceptance 2026-09-17 (real bank CSV imported, posted, trial balance balanced, re-upload rejected).
+- **Remaining Work**: None on this task. Manual acceptance was completed by the user before this checkpoint.
+- **Changed Files**:
+  - `prisma/schema.prisma` + the `add_bank_csv_import` migration, `src/lib/csvImport.ts`, `src/lib/csvImport.test.ts` — in product commit `539de27`
+  - `docs/specs/2026-09-17-spec-csv-import.md`, `docs/tasks/TASK-2026-09-17-csv-import.md`, `docs/STATE.md` — in plan commit `bcf62fa`
+  - Full listing in the Handoff Record §3, which this checkpoint pairs with
+- **Branch / Revision**: `main @ 539de27` (plan `bcf62fa` + build `539de27`)
+- **Locked Decisions and Invariants**: INV-01/02/03/04 hold. Drafts are unpersisted and rebuilt deterministically; the parser is hand-rolled with no new dependencies; per-row idempotency keys are `imp-{hash8}:{index}`; the cash leg is fixed to account 1000 (ASSUMPTION-csv-import-002, validated by acceptance).
+- **Verification Evidence**: `bun test` 44 pass / 0 fail; `tsc --noEmit` green; `eslint` green; `bun run build` 9 of 9 routes; dev smoke 7 of 7 routes 200; invariant grep clean.
+- **CI Evidence**: `None — this repository has no test workflow in CI, so the gate above is a local run; there is no pipeline result to link.`
+- **Blockers**: None
+- **Scope Changes**: None
+- **Next Action**: Define Milestone 4 scope (PDF receipts were suggested) via `pk:plan`, or stop here.
+- **Resume Condition**: None — the task is complete; resume by planning the next milestone.
+- **Recorded By**: Assistant (`pk:checkpoint`), 2026-09-17 UTC
+- **Policy**: Soft ~60 min / hard ~90 min checkpoints observed manually; the host provides no mechanical timer.

@@ -1,14 +1,26 @@
 # Checkpoint Record 01: TASK-2026-09-17-core-ledger
 
+- **Record Type**: `Checkpoint Record`
+- **Checkpoint ID**: `CHECKPOINT-2026-09-17-core-ledger-01`
 - **Task ID**: `TASK-2026-09-17-core-ledger`
 - **Specification**: `docs/specs/2026-09-17-spec-core-ledger.md` (`PLAN-core-ledger`, Full)
-- **Execution State**: `completed` (all AC-1..AC-6 complete, user acceptance 2026-09-17)
-- **Objective**: Local double-entry core — seeded 5-class CoA, atomic balanced journal with cents-only math + reversals, Trial Balance + P&L.
-- **Completed**: T1 scaffold, T2 migration + 15-account seed, T3 money/contracts + 10 tests, T4 engine + 17 tests, T5 actions + journal UI, T6 TB/P&L pages, T7 hardening + smoke.
-- **Remaining**: None on this task. Manual browser acceptance done by user (expense + payment → TB balances).
-- **Changed files**: See Handoff Record §3. Branch `main` at `6dc9529` (product `9a4f250` + docs `6dc9529`).
-- **Decisions / invariants**: INV-01 balanced fail-closed, INV-02 integer cents, INV-03 append-only + reversals, INV-04 local single-owner; libSQL adapter (better-sqlite3 incompatible with Bun); idempotencyKey opaque (UUID) while account/entry ids stay cuid.
-- **Verification**: `bun test` 17 pass / 0 fail; `bun run typecheck` green; `bun run lint` green; `bun run build` 8/8 routes; dev smoke 5/5 routes 200; seed idempotent; invariant grep clean. CI: N/A (no pipeline).
-- **Blockers**: None. **Scope changes**: None (Later ledger untouched).
-- **Next action**: Start next milestone via `pk:plan` when user defines Milestone 2 scope (or set up remote + `pk:pr` for review).
-- **Policy**: Soft ~60min / hard ~90min checkpoints observed manually; host provides no mechanical timer (`POLICY_LIMITATION`).
+- **Created**: `2026-09-17 UTC`
+- **Checkpoint Type**: `Event-driven milestone checkpoint (Milestone 1 close)`
+- **Execution State**: `completed`
+- **Objective**: Local double-entry core — seeded 5-class chart of accounts, atomic balanced journal with cents-only math and reversals, Trial Balance and P&L.
+- **Completed Work**: T1 scaffold, T2 migration + 15-account seed, T3 money/contracts + 10 tests, T4 engine + 17 tests, T5 actions + journal UI, T6 TB/P&L pages, T7 hardening + smoke. All of AC-1 to AC-6 complete; user manual acceptance 2026-09-17 (expense posted, client payment posted, trial balance balanced).
+- **Remaining Work**: None on this task. Manual browser acceptance was completed by the user before this checkpoint.
+- **Changed Files**:
+  - `src/lib/*`, `src/app/*`, `src/components/*`, `src/actions/*` and `prisma/*` — the core ledger, in product commit `9a4f250`
+  - `PROMPTKIT.md`, `docs/specs/2026-09-17-spec-core-ledger.md`, `docs/tasks/TASK-2026-09-17-core-ledger.md`, `docs/STATE.md` — the records, in `6dc9529`
+  - Full listing in the Handoff Record §3, which this checkpoint pairs with
+- **Branch / Revision**: `main @ 6dc9529` (product `9a4f250` + docs `6dc9529`)
+- **Locked Decisions and Invariants**: INV-01 balanced fail-closed, INV-02 integer cents, INV-03 append-only + reversals, INV-04 local single-owner; libSQL adapter (better-sqlite3 is incompatible with Bun); `idempotencyKey` opaque (UUID) while account and entry ids stay cuid.
+- **Verification Evidence**: `bun test` 17 pass / 0 fail; `bun run typecheck` green; `bun run lint` green; `bun run build` 8 of 8 routes; dev smoke 5 of 5 routes 200; seed idempotent on re-run; invariant grep clean (no update/delete/upsert paths).
+- **CI Evidence**: `None — this repository has no test workflow in CI, so the gate above is a local run; there is no pipeline result to link.`
+- **Blockers**: None
+- **Scope Changes**: None
+- **Next Action**: Start the next milestone via `pk:plan` once the user defines Milestone 2 scope, or set up a remote and use `pk:pr` for review.
+- **Resume Condition**: None — the task is complete; resume by planning the next milestone. Note the running `:3000` dev server predates Milestone 4 and needs a restart.
+- **Recorded By**: Assistant (`pk:checkpoint`), 2026-09-17 UTC
+- **Policy**: Soft ~60 min / hard ~90 min checkpoints observed manually; the host provides no mechanical timer.
