@@ -86,6 +86,59 @@ And the trial balance and profit & loss reports are **computed from the posted
 lines** each time they are read; there are no stored running totals, so a report
 cannot drift out of step with the ledger.
 
+## How an invoice gets paid
+
+A Stripe payment reaches the same ledger by a different route, and it has to
+survive something a form never does: **Stripe delivers the same event more than
+once**, and it cannot hold a session.
+
+1. **The button** (`src/components/StripePayButton.tsx`) calls the
+   `createCheckout` server action and then sends the browser to the URL Stripe
+   returns. A failure is shown inline instead of redirecting.
+2. **Opening the checkout** (`src/actions/stripe.ts`) requires a session, refuses
+   any invoice that is not `UNPAID`, and creates a Stripe Checkout session
+   (`src/lib/stripe.ts`) for `baseTotalCents` in USD. That session carries
+   `client_reference_id = <invoice id>` — the only thread tying the payment back
+   to the ledger — and the returned session id is saved on the invoice. A missing
+   or placeholder `STRIPE_SECRET_KEY` produces a readable message rather than a
+   crash.
+3. **The webhook** (`src/app/api/stripe/webhook/route.ts`) is the one route left
+   outside the login wall, because Stripe cannot hold a session. It authenticates
+   by **signature** instead: it reads the raw request body (signature checking
+   needs the unparsed bytes), verifies it against `STRIPE_WEBHOOK_SECRET`, and
+   answers `400` to anything that fails — so a forged request cannot mark an
+   invoice paid. It also checks that `client_reference_id` looks like a real id
+   before trusting it.
+4. **A repeat delivery must change nothing**, and there are three separate guards
+   for it. The event id is written to `StripeEvent` *before* any work happens and
+   the handler exits early if that row is already stamped `processedAt`; an
+   invoice that is already `PAID` is reported as such without acting; and the
+   ledger key is derived from the event id (`stripe-<event id>`), so a retry can
+   never post a second payment.
+5. **The ledger change** happens in `markPaid` (`src/lib/invoicing.ts`). One
+   transaction creates a balanced entry — **debit Cash, credit Accounts
+   Receivable**, both for the base total — and flips the invoice to `PAID` with
+   `paymentEntryId` pointing at that entry. A payment is therefore an ordinary
+   journal entry, indistinguishable in the reports from one typed by hand.
+
+| Layer | File | Responsibility |
+| :--- | :--- | :--- |
+| Button | `src/components/StripePayButton.tsx` | Start checkout, show failures |
+| Server action | `src/actions/stripe.ts` | Auth, eligibility, session id on the invoice |
+| Stripe client | `src/lib/stripe.ts` | Build the session; verify the signature |
+| Webhook | `src/app/api/stripe/webhook/route.ts` | Authenticate by signature, dedupe, dispatch |
+| Domain | `src/lib/invoicing.ts` (`markPaid`) | Post the payment entry and set `PAID` |
+
+Three consequences worth knowing. The `success_url` is **decorative**: nothing in
+the app reads its `?paid=1`, and an invoice becomes paid only when the signed
+webhook arrives — so editing the URL in the address bar achieves nothing. (One
+side effect of that: there is no post-payment confirmation screen, because the
+buyer simply lands back on the invoice, which the webhook has usually already
+flipped to `PAID`.) Only an `UNPAID` invoice can be paid, so a `VOID` or `DRAFT`
+invoice cannot be resurrected by a payment. And event types the app does not
+handle are recorded and acknowledged with `200`, which is deliberate: returning
+an error would make Stripe retry forever.
+
 ## Run it locally
 
 You need [Bun](https://bun.sh) installed. From the project root:
