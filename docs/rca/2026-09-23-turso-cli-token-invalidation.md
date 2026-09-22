@@ -99,7 +99,8 @@ turso auth api-tokens mint <name> --org <org> --group <group> --scope read --sco
 curl -X POST "https://api.turso.tech/v1/organizations/<org>/databases/<db>/auth/rotate" \
   -H "Authorization: Bearer <api-token>"          # 200, no body
 turso db tokens create <db> > .env.new-token      # mint AFTER rotating: rotation kills it otherwise
-# wire via stdin (never argv), redeploy, verify, then confirm the snapshot now returns 401
+# wire via stdin (never argv), redeploy BOTH Production AND Preview, verify, then confirm the
+# snapshot now returns 401  -- redeploying only Production leaves Preview broken (see below)
 
 # 3. Revoke the platform credential -- API tokens, unlike SQL tokens, ARE revocable:
 turso auth api-tokens revoke <name>
@@ -107,13 +108,37 @@ turso auth api-tokens revoke <name>
 
 Ordering is forced: rotation invalidates **every** token issued for the database, including one minted
 seconds earlier, and Vercel only applies env changes to new deployments — so a short window of failing
-authenticated routes is unavoidable. Measured for this app: **63s** end-to-end (rotate 1s, mint 4s,
+authenticated routes is unavoidable. **This applies to every environment, not just Production:** the rotation updates Preview's env var too, but Preview is a *separate deployment*, so redeploying only Production leaves Preview answering `500` on every DB-backed route. That is exactly what happened here — Preview stayed broken for about an hour on 2026-09-23 until it was rebuilt. Measured for this app: **63s** end-to-end (rotate 1s, mint 4s,
 verify 6s, Vercel wiring 7s, redeploy `Ready` 52s), with `/login` still answering `200` to
 cookie-less requests throughout. **Correction:** an earlier version of this line said `/login` is
 "static", which is wrong — it is `ƒ` dynamic, because its `GET` awaits `cookies()`. The real reason it
 survives is `getSession()` returning `null` *before* any database read when no session cookie is
 present (`src/lib/session.ts:8`); with a cookie it would call `validateSession` and hit the database
 like any other route.
+
+### Verifying a deployment actually reaches the database
+
+A probe that cannot fail is worse than no probe. This repo shipped two invalid ones for a week:
+
+| Probe | Why it is invalid |
+| :--- | :--- |
+| `curl -H 'Cookie: ledger_session=x' <url>/journal` → reads `307` as "DB reachable" | The session cookie is **`ledgercraft_session`**. With a non-matching name the middleware reads no cookie and short-circuits to `/login?next=…`; the page never runs, so **no database query happens at all**. The probe could not have failed even if the database were down. |
+| Treating a `307` as proof of a successful query | The middleware and `requireSession()` *both* redirect to `/login`, so the status code alone cannot distinguish "the database answered" from "the request was stopped before the database". |
+
+**Valid probe.** Use the real cookie name, and add a query string to reveal which layer redirected:
+
+```bash
+# middleware: next = pathname + search, so the query string survives
+curl -sI -H 'Cookie: ledger_session=x'      '<url>/journal?probe=x'   # -> /login?next=%2Fjournal%3Fprobe%3Dxyz
+
+# page: requireSession() is called with no argument, so the redirect is bare
+curl -sI -H 'Cookie: ledgercraft_session=x' '<url>/journal?probe=x'   # -> /login
+```
+
+A bare `307 /login` means the page ran and `validateSession()` successfully queried the database. A
+**`500`** means it did not: `validateSession` has no `try`/`catch` and `resolveDatasource` throws when a
+remote URL has no token, so a database failure cannot masquerade as a redirect. Applying this to
+Preview on 2026-09-23 is precisely what exposed Preview as broken rather than merely unverified.
 
 ## 7. Actions
 
