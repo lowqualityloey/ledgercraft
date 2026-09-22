@@ -12,12 +12,12 @@
 - **CI Triage Link [Required when a CI failure exists]**: `N/A - no CI failure`
 - **Verification Link [Required]**: `[RUNBOOK-turso-2026-09-23](../rca/2026-09-23-turso-cli-token-invalidation.md#6-working-path-runbook)`
 - **Verified Result [Required]**: `Pending` — this is a plan; the runbook it cites *was* proven on 2026-09-23 against the live database
-- **Resume Condition [Required]**: human approval of the window below, plus creation of the Task Record (see Execution-Control Evidence)
+- **Resume Condition [Required]**: window approved; execution now resumes **only** on creation of the Task Record (see Execution-Control Evidence), after which `ACTION-rot-002`..`004` may be confirmed separately.
 
 - **Nature**: credential rotation, **not** a code release — no tag, no push, no version bump. It does include Vercel env writes and two redeploys, all human-executed.
 - **Deploy Lead**: owner (Release Coordinator and sole approver)
 - **Target Environment**: Vercel Production **and** Preview, plus local `.env`
-- **Proposed Window [approval needed]**: on or after **2026-11-21**, no later than **2026-12-01**- **Commit SHA**: `N/A until execution — the plan lands on main in whichever commit carries it`
+- **Approved Window**: on or after **2026-11-21**, no later than **2026-12-01** — **approved by the owner 2026-09-23 (2026-09-22T16:03Z)**, recorded in `ACTION-rot-001`. Approval covers the *window only*; every execution block below stays `pending`.- **Commit SHA**: `N/A until execution — the plan lands on main in whichever commit carries it`
 
 ## Why this exists
 
@@ -102,7 +102,7 @@ Run every row against **Production and Preview**.
 
 | ID | Proposed action | Confirmation State | Approver / Timestamp | Scope | Reversal |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| `ACTION-rot-001` | Choose and approve the execution window (proposed 2026-11-21 → 2026-12-01) | `pending` | `N/A - awaiting confirmation` | scheduling only | drop the plan |
+| `ACTION-rot-001` | Choose and approve the execution window (proposed 2026-11-21 → 2026-12-01) | `confirmed` | owner, 2026-09-23 (2026-09-22T16:03Z), in-session decision on the `pk:ship` prompt | scheduling only — authorizes no execution step | window withdrawn |
 | `ACTION-rot-002` | Mint the scoped platform credential, then call `auth/rotate` | `pending` | `N/A - awaiting confirmation` | one database, one call | re-mint DB token (step 3) |
 | `ACTION-rot-003` | Write env vars and redeploy **both** Vercel environments | `pending` | `N/A - awaiting confirmation` | `DATABASE_URL` + `DATABASE_AUTH_TOKEN` × 2 envs | restore previous env values + redeploy |
 | `ACTION-rot-004` | Revoke the platform credential and update STATE §7's ISO date | `pending` | `N/A - awaiting confirmation` | one API token + one tracker line | re-mint if needed; git revert |
