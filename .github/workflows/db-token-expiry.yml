@@ -1,0 +1,51 @@
+name: DB token expiry guard
+
+# The production database token is minted with a bounded expiry (90 days at the
+# time of writing, see docs/STATE.md section 5). That expiry does not announce
+# itself: every DB-backed route starts failing while /login is static and keeps
+# returning 200, so the breakage is partial and nothing reports it. This job is
+# the announcement - it starts failing 14 days before the deadline.
+#
+# GitHub emails the user who last modified the cron schedule when a scheduled
+# workflow fails, which is how the owner actually gets told.
+#
+# No credential is stored in GitHub for this. The check reads only a date - the
+# single deadline line in docs/STATE.md - so rotating the token means editing
+# that line and nothing in here. Keeping a copy of the token as a secret just to
+# read its own expiry claim would duplicate the credential this guard exists to
+# bound.
+
+on:
+  schedule:
+    # Daily at 06:00 UTC / 18:00 NZ. Failing from 14 days out means roughly a
+    # fortnight of daily reminders before anything breaks.
+    - cron: "0 6 * * *"
+  # Also run whenever the check or the recorded date changes, so the guard is
+  # exercised on the push that introduces it and a future edit to the deadline
+  # line is validated immediately rather than at the next 06:00.
+  push:
+    branches: [main]
+    paths:
+      - docs/STATE.md
+      - .github/workflows/db-token-expiry.yml
+      - .github/scripts/check_db_token_expiry.py
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: db-token-expiry
+  cancel-in-progress: false
+
+jobs:
+  expiry:
+    name: Database token not near expiry
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Check recorded database-token expiry
+        env:
+          STATE_FILE: docs/STATE.md
+          WARN_DAYS: "14"
+        run: python3 .github/scripts/check_db_token_expiry.py
