@@ -109,7 +109,7 @@ Invariants locked: INV-01 balanced fail-closed, INV-02 integer cents, INV-03 app
 - **TDD Exception Verification [Required for Documentation, Configuration, or Research Work; Not applicable for Code Work]**: `N/A - Code Work`
 - **CI Evidence**: `N/A`
 - **Review Evidence**: `N/A`
-- **Commit Evidence**: `bcf62fa docs(plan): scope milestone 3 bank csv import (spec + task + STATE)`
+- **Commit Evidence**: `bcf62fa docs(plan): scope milestone 3 bank csv import (spec + task + STATE); 539de27 feat(imports): add bank csv import with drafts and dedup (M3.1–M3.4)`
 - **Pull Request Evidence**: `N/A (no remote)`
 - **Release Evidence**: `N/A`
 - **Blocker and Resume Condition**: `None — accepted 2026-09-17 (user reply "accepted"; CSV-shape + cash-leg assumptions validated by acceptance)`
