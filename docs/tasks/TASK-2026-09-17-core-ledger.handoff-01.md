@@ -64,21 +64,24 @@ Before making implementation changes, the receiver must check and record:
 - [ ] **Blockers**: Blockers and resume conditions are still valid.
 - [ ] **Next action**: Exactly one next action is accepted without implicit scope expansion.
 
-- **Receiver**: `[pending fresh session]`
-- **Acceptance Decision**: `[pending]`
-- **Acceptance Timestamp**: `[pending]`
-- **Receiver-Validated Revision**: `[pending]`
-- **Validation Evidence**: `[pending]`
-- **Scope Changed During Acceptance**: `[pending]`
-- **Acceptance Blocker and Resume Condition**: `[pending]`
+- **Receiver**: `none — closed as superseded, see §6`
+- **Acceptance Decision**: `n/a — no receiver transfer ever occurred`
+- **Acceptance Timestamp**: `n/a`
+- **Receiver-Validated Revision**: `n/a`
+- **Validation Evidence**: `n/a — the workspace is many revisions past the 6dc9529 validated revision, so a revision-match check cannot pass (see §7)`
+- **Scope Changed During Acceptance**: `n/a`
+- **Acceptance Blocker and Resume Condition**: `n/a`
+
+> The checklist above is deliberately left unticked. It is a pre-transfer protocol addressed to a receiver, and no receiver ever picked this handoff up, so ticking it would assert a validation that never happened.
 
 ## 6. Disposition
 
-- **Resulting Execution State**: `[pending receiver acceptance]`
+- **Resulting Execution State**: `superseded — closed without receiver validation (2026-09-22)`
 - **Task Record Updated**: `docs/tasks/TASK-2026-09-17-core-ledger.md (sealed completed at 6dc9529)`
-- **Handoff Closed By**: `[pending]`
-- **Closed Timestamp**: `[pending]`
-- **Next Action**: `Define Milestone 2 scope via pk:plan`
+- **Handoff Closed By**: `Assistant (documentation closure at user direction) — explicitly not a receiver acceptance`
+- **Closed Timestamp**: `2026-09-22`
+- **Next Action**: `Define Milestone 2 scope via pk:plan` *(historical — M2 shipped 2026-09-17, as did M3–M7)*
+- **Closure Basis**: No fresh session ever consumed this handoff. The work continued in the same session chain and the milestone outcome is recorded by the sealed Task Record plus `docs/STATE.md` §2 and §8, so the transfer this record exists to serve never happened. It is closed `superseded` rather than `accepted` because acceptance is no longer possible: §5's revision check requires the workspace to match `6dc9529`, and the workspace has since advanced through M2–M7 and the hosted libSQL migration. The validated revision itself is still addressable — verified 2026-09-22, `6dc9529` resolves to `docs(ledger): record phase 0 intake through milestone 1 task record` — so this is a moved-branch failure, not a lost-SHA one. The record is retained as a point-in-time archive of decisions and evidence, not as an active transfer document.
 
 ## 7. Post-Closeout Corrections
 

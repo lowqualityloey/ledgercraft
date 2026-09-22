@@ -65,21 +65,24 @@ Before making implementation changes, the receiver must check and record:
 - [ ] **Blockers**: Blockers and resume conditions are still valid.
 - [ ] **Next action**: Exactly one next action is accepted without implicit scope expansion.
 
-- **Receiver**: `[pending fresh session]`
-- **Acceptance Decision**: `[pending]`
-- **Acceptance Timestamp**: `[pending]`
-- **Receiver-Validated Revision**: `[pending]`
-- **Validation Evidence**: `[pending]`
-- **Scope Changed During Acceptance**: `[pending]`
-- **Acceptance Blocker and Resume Condition**: `[pending]`
+- **Receiver**: `none — closed as superseded, see §6`
+- **Acceptance Decision**: `n/a — no receiver transfer ever occurred`
+- **Acceptance Timestamp**: `n/a`
+- **Receiver-Validated Revision**: `n/a`
+- **Validation Evidence**: `n/a — the workspace is many revisions past the 539de27 validated revision, so a revision-match check cannot pass (see §7)`
+- **Scope Changed During Acceptance**: `n/a`
+- **Acceptance Blocker and Resume Condition**: `n/a`
+
+> The checklist above is deliberately left unticked. It is a pre-transfer protocol addressed to a receiver, and no receiver ever picked this handoff up, so ticking it would assert a validation that never happened.
 
 ## 6. Disposition
 
-- **Resulting Execution State**: `[pending receiver acceptance]`
+- **Resulting Execution State**: `superseded — closed without receiver validation (2026-09-22)`
 - **Task Record Updated**: `docs/tasks/TASK-2026-09-17-csv-import.md (completed at 539de27)`
-- **Handoff Closed By**: `[pending]`
-- **Closed Timestamp**: `[pending]`
-- **Next Action**: `Define Milestone 4 scope via pk:plan, or stop`
+- **Handoff Closed By**: `Assistant (documentation closure at user direction) — explicitly not a receiver acceptance`
+- **Closed Timestamp**: `2026-09-22`
+- **Next Action**: `Define Milestone 4 scope via pk:plan, or stop` *(historical — M4 shipped 2026-09-17, as did M5–M7)*
+- **Closure Basis**: No fresh session ever consumed this handoff. The work continued in the same session chain, the task was user-accepted, and the outcome is recorded by the Task Record plus `docs/STATE.md` §2 and §8. It is closed `superseded` rather than `accepted` because acceptance is no longer possible: §5's revision check requires the workspace to match `539de27`, and the workspace has since advanced through M4–M7 and the hosted libSQL migration. The validated revision itself is still addressable — verified 2026-09-22, `539de27` resolves to `feat(imports): add bank csv import with drafts and dedup` — so this is a moved-branch failure, not a lost-SHA one. The record is retained as a point-in-time archive of decisions and evidence, not as an active transfer document.
 
 ## 7. Post-Closeout Corrections
 
