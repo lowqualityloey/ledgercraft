@@ -2,15 +2,19 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getInvoiceReceipt } from "@/actions/invoicing";
 import { InvoiceReceipt } from "@/components/InvoiceReceipt";
+import { PaymentConfirmation } from "@/components/PaymentConfirmation";
 import { PrintButton } from "@/components/PrintButton";
 import { StripePayButton } from "@/components/StripePayButton";
 
 export default async function InvoiceReceiptPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ paid?: string }>;
 }) {
   const { id } = await params;
+  const { paid } = await searchParams;
   const invoice = await getInvoiceReceipt(id);
   if (!invoice) notFound();
 
@@ -26,6 +30,9 @@ export default async function InvoiceReceiptPage({
         </Link>
         <PrintButton />
       </nav>
+      {paid === "1" && (
+        <PaymentConfirmation status={invoice.status} number={invoice.number} />
+      )}
       <h1 className="no-print text-xl font-semibold">
         Receipt {invoice.number}
       </h1>
